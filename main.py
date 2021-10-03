@@ -46,7 +46,17 @@ load_dotenv('.env')
 
 # Se establece el enlace a la base de datos
 sinac_turismo_api.add_middleware(DBSessionMiddleware, db_url=os.environ["DATABASE_URL"])
-sinac_turismo_api.add_middleware(CORSMiddleware, allow_origins=["*"])
+sinac_turismo_api.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost",
+        "http://localhost:8000",
+        "*"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Ruta predefinida

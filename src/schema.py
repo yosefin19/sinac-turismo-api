@@ -12,6 +12,7 @@ class TouristDestination(BaseModel):
         Clase que hereda de Base y hace referencía a un DTO de la información
         de los destinos turísticos.
     """
+    id: int
     name: str
     description: str
     schedule: str
