@@ -12,6 +12,7 @@ class ConservationArea(BaseModel):
         Clase que hereda de BaseModel y hace referencía a un DTO de la información de
         las áreas de conservación.
     """
+    id: int
     name: str
     description: str
     photos_path: str
