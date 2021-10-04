@@ -5,6 +5,7 @@ from fastapi_sqlalchemy import db
 from fastapi import File, UploadFile, status
 
 from src.models import TouristDestination as ModelTouristDestination
+from src.models import ConservationArea as ModelConservationArea
 from src.schema import TouristDestination as SchemaTouristDestination
 
 from src import repository
@@ -108,7 +109,7 @@ def update_tourist_destination(tourist_destination_id: int, tourist_destination:
     """
     db_tourist_destination = select_tourist_destination(tourist_destination_id)
 
-    db_tourist_destination.name = db_tourist_destination.name
+    db_tourist_destination.name = tourist_destination.name
     db_tourist_destination.description = tourist_destination.description
     db_tourist_destination.schedule = tourist_destination.schedule
     db_tourist_destination.fare = tourist_destination.fare
@@ -150,7 +151,8 @@ async def update_tourist_destination_photos(tourist_destination_id: int, photos:
     return db_tourist_destination
 
 
-@tourist_destination_router.delete("/delete-tourist-destination/{tourist_destination_id}", status_code=status.HTTP_200_OK)
+@tourist_destination_router.delete("/delete-tourist-destination/{tourist_destination_id}",
+                                   status_code=status.HTTP_200_OK)
 async def delete_tourist_destination(tourist_destination_id: int):
     """
     Ruta utilizada para eliminar todos los datos asociados a un destino turístico.
