@@ -24,7 +24,7 @@ def select_conservation_area(conservation_area_id: int):
     return db_conservation_area
 
 
-@conservation_area_router.post("/add-conservation-area", response_model=SchemaConservationArea,
+@conservation_area_router.post("/conservation-area", response_model=SchemaConservationArea,
                                status_code=status.HTTP_201_CREATED)
 def add_conservation_area(conservation_area: SchemaConservationArea):
     """
@@ -42,7 +42,7 @@ def add_conservation_area(conservation_area: SchemaConservationArea):
     return db_conservation_area
 
 
-@conservation_area_router.post('/add-conservation-area/{conservation_area_id}/photos',
+@conservation_area_router.post('/conservation-area/{conservation_area_id}/photos',
                                status_code=status.HTTP_201_CREATED)
 async def add_conservation_area_photos(conservation_area_id: int,
                                        photos: List[UploadFile] = File(...), region_photo: UploadFile = File(...)):
@@ -89,7 +89,7 @@ def get_conservation_area(conservation_area_id: int):
     return conservation_area
 
 
-@conservation_area_router.post("/update-conservation-area/{conservation_area_id}",
+@conservation_area_router.post("/conservation-area/update/{conservation_area_id}",
                                response_model=SchemaConservationArea, status_code=status.HTTP_200_OK)
 def update_conservation_area(conservation_area_id: int, conservation_area: SchemaConservationArea):
     """
@@ -110,7 +110,7 @@ def update_conservation_area(conservation_area_id: int, conservation_area: Schem
     return db_conservation_area
 
 
-@conservation_area_router.post("/update-conservation-area/{conservation_area_id}/photos",
+@conservation_area_router.post("/conservation-area/update/{conservation_area_id}/photos",
                                response_model=SchemaConservationArea, status_code=status.HTTP_200_OK)
 async def update_conservation_area_photos(conservation_area_id: int,
                                           photos: List[UploadFile] = File(...), region_photo: UploadFile = File(...)):
@@ -134,7 +134,7 @@ async def update_conservation_area_photos(conservation_area_id: int,
     return db_conservation_area
 
 
-@conservation_area_router.delete("/delete-conservation-area/{conservation_area_id}", status_code=status.HTTP_200_OK)
+@conservation_area_router.delete("/conservation-area/{conservation_area_id}", status_code=status.HTTP_200_OK)
 async def delete_conservation_area(conservation_area_id: int):
     """
     Ruta utilizada para eliminar un área de conservacíon con los datos asociados.
