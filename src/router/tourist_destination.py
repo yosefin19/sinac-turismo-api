@@ -26,7 +26,7 @@ def select_tourist_destination(tourist_destination_id: int):
     return db_tourist_destination
 
 
-@tourist_destination_router.post("/add-tourist-destination", response_model=SchemaTouristDestination,
+@tourist_destination_router.post("/tourist-destination", response_model=SchemaTouristDestination,
                                  status_code=status.HTTP_201_CREATED)
 def add_tourist_destination(tourist_destination: SchemaTouristDestination):
     """
@@ -55,7 +55,7 @@ def add_tourist_destination(tourist_destination: SchemaTouristDestination):
     return db_tourist_destination
 
 
-@tourist_destination_router.post("/add-tourist-destination/{tourist_destination_id}/photos",
+@tourist_destination_router.post("/tourist-destination/{tourist_destination_id}/photos",
                                  response_model=SchemaTouristDestination, status_code=status.HTTP_201_CREATED)
 async def add_tourist_destination_photos(tourist_destination_id: int, photos: List[UploadFile] = File(...)):
     """
@@ -98,7 +98,7 @@ def get_tourist_destination(tourist_destination_id: int):
 
 
 # conservation-area/{conservation_area_id}
-@tourist_destination_router.post("/update-tourist-destination/{tourist_destination_id}",
+@tourist_destination_router.post("/tourist-destination/update/{tourist_destination_id}",
                                  response_model=SchemaTouristDestination, status_code=status.HTTP_200_OK)
 def update_tourist_destination(tourist_destination_id: int, tourist_destination: SchemaTouristDestination):
     """
@@ -130,7 +130,7 @@ def update_tourist_destination(tourist_destination_id: int, tourist_destination:
     return db_tourist_destination
 
 
-@tourist_destination_router.post("/update-tourist-destination/{tourist_destination_id}/photos",
+@tourist_destination_router.post("/tourist-destination/update/{tourist_destination_id}/photos",
                                  response_model=SchemaTouristDestination, status_code=status.HTTP_200_OK)
 async def update_tourist_destination_photos(tourist_destination_id: int, photos: List[UploadFile] = File(...)):
     """
@@ -151,7 +151,7 @@ async def update_tourist_destination_photos(tourist_destination_id: int, photos:
     return db_tourist_destination
 
 
-@tourist_destination_router.delete("/delete-tourist-destination/{tourist_destination_id}",
+@tourist_destination_router.delete("/tourist-destination/{tourist_destination_id}",
                                    status_code=status.HTTP_200_OK)
 async def delete_tourist_destination(tourist_destination_id: int):
     """
