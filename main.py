@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.profile import profile
 
 sinac_turismo_api = FastAPI()
+sinac_turismo_api.mount('/data_repository', StaticFiles(directory="data_repository"), name='data_repository')
 
 load_dotenv('.env')
 
