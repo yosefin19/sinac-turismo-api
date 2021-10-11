@@ -50,6 +50,8 @@ class TouristDestination(Base):
     is_forest = Column(Boolean)
     is_volcano = Column(Boolean)
     is_mountain = Column(Boolean)
+    start_season = Column(Integer)
+    end_season = Column(Integer)
     conservation_area_id = Column(Integer, ForeignKey("conservation_area.id"))
 
     conservation_area = relationship(ConservationArea, backref="tourist_destinations")

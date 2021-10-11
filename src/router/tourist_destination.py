@@ -49,6 +49,8 @@ def add_tourist_destination(tourist_destination: SchemaTouristDestination):
                                                      is_forest=tourist_destination.is_forest,
                                                      is_volcano=tourist_destination.is_volcano,
                                                      is_mountain=tourist_destination.is_mountain,
+                                                     start_season=tourist_destination.start_season,
+                                                     end_season=tourist_destination.end_season,
                                                      conservation_area_id=tourist_destination.conservation_area_id)
     db.session.add(db_tourist_destination)
     db.session.commit()
@@ -124,6 +126,8 @@ def update_tourist_destination(tourist_destination_id: int, tourist_destination:
     db_tourist_destination.is_forest = tourist_destination.is_forest
     db_tourist_destination.is_volcano = tourist_destination.is_volcano
     db_tourist_destination.is_mountain = tourist_destination.is_mountain
+    db_tourist_destination.start_season = tourist_destination.start_season
+    db_tourist_destination.end_season = tourist_destination.end_season
 
     db.session.commit()
     db.session.refresh(db_tourist_destination)

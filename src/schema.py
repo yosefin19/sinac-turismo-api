@@ -28,6 +28,8 @@ class TouristDestination(BaseModel):
     is_forest: bool
     is_volcano: bool
     is_mountain: bool
+    start_season: int
+    end_season: int
     conservation_area_id: int
 
     class Config:
