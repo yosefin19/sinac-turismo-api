@@ -1,10 +1,19 @@
 from pydantic import BaseModel
 
+
 """
-Se establecen los objetos de de transferencia de datos (DTO), esquemas que son utilizados para
+Se establecen los objetos de transferencia de datos (DTO), esquemas que son utilizados para
 transportar datos entre distintos procesos. Se hace uso de la biblioteca Pydantic la cual se
 encarga de llevar a cabo validación de datos, en este caso de JSON a clases de Python.
 """
+
+class User(BaseModel):
+    id: int
+    email: str
+    password: str
+
+    class Config:
+        orm_mode = True
 
 
 class TouristDestination(BaseModel):
@@ -51,3 +60,4 @@ class ConservationArea(BaseModel):
         orm_mode = True
 
   
+

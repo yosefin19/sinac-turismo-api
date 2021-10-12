@@ -26,6 +26,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
+
 from fastapi.staticfiles import StaticFiles
 from fastapi_sqlalchemy import DBSessionMiddleware
 
@@ -35,6 +36,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.router.tourist_destination import tourist_destination_router
 from src.router.conservation_area import conservation_area_router
+from src.user import user
 
 sinac_turismo_api = FastAPI()
 
@@ -45,6 +47,7 @@ sinac_turismo_api.mount('/data_repository', StaticFiles(directory="data_reposito
 load_dotenv('.env')
 
 # Se establece el enlace a la base de datos
+
 sinac_turismo_api.add_middleware(DBSessionMiddleware, db_url=os.environ["DATABASE_URL"])
 sinac_turismo_api.add_middleware(
     CORSMiddleware,
@@ -58,7 +61,6 @@ sinac_turismo_api.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Ruta predefinida
 @sinac_turismo_api.get("/")
 async def root():
@@ -71,6 +73,9 @@ sinac_turismo_api.include_router(tourist_destination_router)
 
 # Se incluyen las rutas de las áreas de conservación
 sinac_turismo_api.include_router(conservation_area_router)
+
+# Se incluyen las rutas de los usuarios
+sinac_turismo_api.include_router(user)
 
 
 if __name__ == "__main__":

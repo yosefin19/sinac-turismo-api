@@ -1,4 +1,3 @@
-
 from sqlalchemy import Integer, String, Column, Float, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -12,6 +11,13 @@ realizar la conexión de los objetos con la base de datos.
 
 
 Base = declarative_base()
+
+
+class User(Base):
+    __tablename__= "user"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String)
+    password = Column(String)
 
 
 class ConservationArea(Base):
@@ -56,5 +62,6 @@ class TouristDestination(Base):
     conservation_area_id = Column(Integer, ForeignKey("conservation_area.id"))
 
     conservation_area = relationship(ConservationArea, backref="tourist_destinations")
+
 
 
