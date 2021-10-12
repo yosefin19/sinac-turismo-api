@@ -1,3 +1,4 @@
+
 from sqlalchemy import Integer, String, Column, Float, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -55,4 +56,5 @@ class TouristDestination(Base):
     conservation_area_id = Column(Integer, ForeignKey("conservation_area.id"))
 
     conservation_area = relationship(ConservationArea, backref="tourist_destinations")
+
 

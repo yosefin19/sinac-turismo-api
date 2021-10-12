@@ -36,16 +36,18 @@ class TouristDestination(BaseModel):
         orm_mode = True
 
 
-'''class ConservationArea(BaseModel):
+class ConservationArea(BaseModel):
     """
         Clase que hereda de BaseModel y hace referencía a un DTO de la información de
         las áreas de conservación.
     """
+    id: int
     name: str
     description: str
     photos_path: str
     region_path: str
 
     class Config:
-        orm_mode = True'''
+        orm_mode = True
 
+  

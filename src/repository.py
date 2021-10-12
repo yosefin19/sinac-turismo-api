@@ -72,6 +72,78 @@ async def add_new_image(path, image):
     return generated_name
 
 
+async def add_conservation_area_photo(directory_name, photos, region_photo):
+    """
+    Función para guardar las fotografías de un área de conservación.
+    :param directory_name: Nombre del directorio donde se guardaran los archivos.
+    :param photos: Lista de datos correspondientes a una imagen.
+    :param region_photo: Datos correspondientes a una imagen.
+    :return: photos_path, region_path: Tupla de strings con las rutas de las imagenes y mapa de la región.
+    """
+
+    PATH = f'/data_repository/conservation_area/{directory_name}/'
+    region_path = await add_new_image(PATH, region_photo)
+    photos_path = []
+    for photo in photos:
+        photos_path.append(await add_new_image(PATH, photo))
+    if photos_path:
+        photos_path = ",".join(photos_path)
+    else:
+        photos_path = ''
+    return photos_path, region_path
+
+
+async def update_conservation_area_photo(conservation_area, directory_name, photos, region_photo):
+    """
+    Función para actualizar las fotografías de un área de conservación.
+    :param conservation_area: Objeto con los datos asociados a un área de conservación.
+    :param directory_name: Nombre del directorio en el que se almacenan los datos.
+    :param photos: Lista de datos correspondientes a una imagen.
+    :param region_photo: Datos correspondientes a una imagen.
+    :return new_photos_path, region_path: Tupla de strings con los valores actualizados.
+    """
+
+    PATH = f'/data_repository/conservation_area/{directory_name}/'
+
+    region_path = conservation_area.region_path
+    if (PATH + region_photo.filename) != region_path:
+        await remove_image(conservation_area.region_path)
+        region_path = await add_new_image(PATH, region_photo)
+
+    photos_path = conservation_area.photos_path.split(',')
+    photos_file_name = [x.split('/')[-1] for x in photos_path]
+    new_photos_path = list()
+    for photo in photos:
+        if not (photo.filename in photos_file_name):
+            new_photos_path.append(await add_new_image(PATH, photo))
+        else:  # es necesario reenviar todas las fotografías nuevamente.
+            index = photos_file_name.index(photo.filename)
+            new_photos_path.append(photos_path[index])
+            photos_file_name.pop(index)
+
+    #  Se eliminan del sistema de archivos las que ya no son necesarias.
+    for filename in photos_file_name:
+        await remove_image(PATH + filename)
+    new_photos_path = ','.join(new_photos_path)
+
+    return new_photos_path, region_path
+
+
+async def delete_conservation_area_photo(conservation_area_id):
+    """
+    Función utilizada para eliminar el directorio y archivos asociados a un área de conservación.
+    :param conservation_area_id: Identificador del área de conservación a eliminar.
+    """
+    directory_name = f'{conservation_area_id}_dir'
+    PATH = f'/data_repository/conservation_area/{directory_name}/'
+    directory_files = os.listdir(os.getcwd() + PATH)
+    if os.path.isdir(os.getcwd() + PATH):
+        directory_files = os.listdir(os.getcwd() + PATH)
+        for file in directory_files:
+            await remove_image(PATH + file)
+        remove_directory(PATH)
+
+
 async def add_tourist_destination_photo(directory_name, photos):
     """
     Función para registrar las fotografías de un destino turístico

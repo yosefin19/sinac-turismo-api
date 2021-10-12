@@ -29,14 +29,14 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi_sqlalchemy import DBSessionMiddleware
 
+
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.router.tourist_destination import tourist_destination_router
+from src.router.conservation_area import conservation_area_router
 
 sinac_turismo_api = FastAPI()
-
-
 
 # Se establece un directorio para la solicitud de archivos
 sinac_turismo_api.mount('/data_repository', StaticFiles(directory="data_repository"), name='data_repository')
@@ -65,8 +65,13 @@ async def root():
     return {'message': "SINAC Turismo API"}
 
 
+
 # Se incluyen las rutas de los destinos turisticos
 sinac_turismo_api.include_router(tourist_destination_router)
+
+# Se incluyen las rutas de las áreas de conservación
+sinac_turismo_api.include_router(conservation_area_router)
+
 
 if __name__ == "__main__":
     uvicorn.run(sinac_turismo_api, host="0.0.0.0", port=8000, reload=True)
