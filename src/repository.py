@@ -136,6 +136,70 @@ async def delete_conservation_area_photo(conservation_area_id):
     """
     directory_name = f'{conservation_area_id}_dir'
     PATH = f'/data_repository/conservation_area/{directory_name}/'
+    directory_files = os.listdir(os.getcwd() + PATH)
+    if os.path.isdir(os.getcwd() + PATH):
+        directory_files = os.listdir(os.getcwd() + PATH)
+        for file in directory_files:
+            await remove_image(PATH + file)
+        remove_directory(PATH)
+
+
+async def add_tourist_destination_photo(directory_name, photos):
+    """
+    Función para registrar las fotografías de un destino turístico
+    :param directory_name: Nombre del directorio en el que se almacenaran las fotografías.
+    :param photos: Lista de datos correspondientes a una imagen.
+    :return photos_path: String separado por coma con las rutas de las fotografías.
+    """
+
+    PATH = f'/data_repository/tourist_destination/{directory_name}/'
+    photos_path = []
+    for photo in photos:
+        photos_path.append(await add_new_image(PATH, photo))
+    if photos_path:
+        photos_path = ",".join(photos_path)
+    else:
+        photos_path = ''
+    return photos_path
+
+
+async def update_tourist_destination_photo(photos_path, directory_name, photos):
+    """
+    Función para actualizar las fotografías de un destino turístico del sistema de archivos.
+    :param photos_path: Ruta de los archivos previamente agregados.
+    :param directory_name: Directorio en el cual se almacenan los archivos en el sistema de archivos.
+    :param photos: Lista de datos correspondientes a una imagen.
+    :return new_photos_path: String separado con comas, con las rutas actualizadas.
+    """
+
+    PATH = f'/data_repository/tourist_destination/{directory_name}/'
+    photos_path_split = photos_path.split(',')
+    photos_file_name = [path.split('/')[-1] for path in photos_path_split]
+    new_photos_path = list()
+    for photo in photos:
+        if not (photo.filename in photos_file_name):
+            new_photos_path.append(await add_new_image(PATH, photo))
+        else:  # es necesario reenviar todas las fotos nuevamente.
+            index = photos_file_name.index(photo.filename)
+            new_photos_path.append(photos_file_name[index])
+            photos_file_name.pop(index)
+
+    # Se eliminan las que ya no son necesarias del sistema de archivos.
+    for filename in photos_file_name:
+        await remove_image(PATH + filename)
+
+    new_photos_path = ','.join(new_photos_path)
+    return new_photos_path
+
+
+async def delete_tourist_destination_photo(tourist_destination_id):
+    """
+    Función para eliminar el directorio de un destino turístico del sistema de archivos.
+    :param tourist_destination_id: identificador del destino turístico
+    """
+
+    directory_name = f'{tourist_destination_id}_dir'
+    PATH = f'/data_repository/tourist_destination/{directory_name}/'
     if os.path.isdir(os.getcwd() + PATH):
         directory_files = os.listdir(os.getcwd() + PATH)
         for file in directory_files:
