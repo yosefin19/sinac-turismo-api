@@ -11,9 +11,21 @@ class User(BaseModel):
     id: int
     email: str
     password: str
+    admin: bool
 
     class Config:
         orm_mode = True
+
+
+class Profile(BaseModel):
+    id: int
+    name: str
+    phone: str
+    email: str
+    user_id: int
+    
+    class Config:
+        orm_mode = True    
 
 
 class TouristDestination(BaseModel):

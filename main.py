@@ -20,6 +20,7 @@ Copyright (C) 2021 Brandon Ledezma, Walter Morales, Yosefin Solano
 ========================================================================
 """
 
+
 import os
 import uvicorn
 
@@ -37,6 +38,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.router.tourist_destination import tourist_destination_router
 from src.router.conservation_area import conservation_area_router
 from src.user import user
+from src.profile import profile
+
 
 sinac_turismo_api = FastAPI()
 
@@ -47,7 +50,6 @@ sinac_turismo_api.mount('/data_repository', StaticFiles(directory="data_reposito
 load_dotenv('.env')
 
 # Se establece el enlace a la base de datos
-
 sinac_turismo_api.add_middleware(DBSessionMiddleware, db_url=os.environ["DATABASE_URL"])
 sinac_turismo_api.add_middleware(
     CORSMiddleware,
@@ -76,6 +78,9 @@ sinac_turismo_api.include_router(conservation_area_router)
 
 # Se incluyen las rutas de los usuarios
 sinac_turismo_api.include_router(user)
+
+# Se incluyen las rutas de los perfiles
+sinac_turismo_api.include_router(profile)
 
 
 if __name__ == "__main__":
