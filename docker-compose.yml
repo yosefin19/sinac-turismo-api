@@ -26,7 +26,7 @@ services:
   app:
     container_name: sinac_turismo_api
     build: .
-    command: bash -c "uvicorn main:sinac_turismo_api --host 0.0.0.0 --port 8000 --reload"
+    command: bash -c "alembic upgrade head && uvicorn main:sinac_turismo_api --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - .:/sinac_turismo_api
     ports:
