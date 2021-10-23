@@ -49,7 +49,6 @@ def add_profile(profile: SchemaProfile):
     return db_profile
 
 
-
 @profile.post("/update-profile",response_model=SchemaProfile, status_code=status.HTTP_200_OK)
 def update_profile(profile: SchemaProfile, profile_id = Depends(auth_wrapper)):
     db_profile = select_profile(profile_id)
@@ -58,8 +57,6 @@ def update_profile(profile: SchemaProfile, profile_id = Depends(auth_wrapper)):
         db_profile.name = profile.name
     if(profile.phone):
         db_profile.phone = profile.phone
-    if(profile.name):
-        db_profile.user_id = profile.user_id
     if(profile.profile_photo_path):
         db_profile.profile_photo_path = profile.profile_photo_path
     if(profile.cover_photo_path):
@@ -137,7 +134,7 @@ async def add_photo(type:str, image: UploadFile = File(...), profile_id = Depend
     return path
 
 
-@profile.delete("/profiles/photo}", status_code=status.HTTP_200_OK)
+@profile.delete("/profiles/photo", status_code=status.HTTP_200_OK)
 async def delete_photo(type, profile_id = Depends(auth_wrapper)):
     directory_name = f'{type}'
     PATH = f'/data_repository/profile/{directory_name}'

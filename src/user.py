@@ -33,21 +33,20 @@ def select_user(user_id: int):
 
 @user.post("/add-user", response_model=SchemaUser, status_code=status.HTTP_201_CREATED)
 def add_user(user: SchemaUser):
-    #hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
+    
     db_user = ModelUser(email=user.email, password=user.password, admin=user.admin)
     db.session.add(db_user)
     db.session.commit()
     return db_user
 
 
-@user.post("/update-user}",response_model=SchemaUser, status_code=status.HTTP_200_OK)
+@user.post("/update-user",response_model=SchemaUser, status_code=status.HTTP_200_OK)
 def update_user( user: SchemaUser, user_id = Depends(auth_wrapper) ):
 
     db_user = select_user(user_id)
 
     if(user.password):
-        #hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
-        db_user.password = user.password# hashed_password
+        db_user.password = user.password
     if(user.email ):
         db_user.email = user.email
     db_user.admin = user.admin
