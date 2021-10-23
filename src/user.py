@@ -17,11 +17,14 @@ def select_user_by_email(email: str):
     return: usuario cuyo correo coincida
     raise: error HTTP 400, no se encontro un usuario
     """
-    db_user = db.session.query(ModelUser).filter(
-        ModelUser.email == email).one()
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+    try:
+        db_user = db.session.query(ModelUser).filter(
+            ModelUser.email == email).one()
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return db_user
+    except:
+        raise HTTPException(status_code=400, detail="User not found")
 
 
 @user.post("/login", status_code=status.HTTP_200_OK)
