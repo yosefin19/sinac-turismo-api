@@ -137,7 +137,7 @@ async def add_photo(type:str, image: UploadFile = File(...), profile_id = Depend
     return path
 
 
-@profile.delete("/profiles/photo}", status_code=status.HTTP_200_OK)
+@profile.delete("/profiles/photo", status_code=status.HTTP_200_OK)
 async def delete_photo(type, profile_id = Depends(auth_wrapper)):
     directory_name = f'{type}'
     PATH = f'/data_repository/profile/{directory_name}'

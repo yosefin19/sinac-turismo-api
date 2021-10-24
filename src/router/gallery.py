@@ -68,19 +68,19 @@ def add_gallery(gallery: SchemaGallery):
     
     return db_g
 
-@gallery.post("/add-photo}", status_code=status.HTTP_200_OK)
+@gallery.post("/add-photo", status_code=status.HTTP_200_OK)
 async def add_gallery_photo(photos: List[UploadFile] = File(...), gallery_id = Depends(auth_wrapper) ):
+    db_g = select_gallery(gallery_id)
 
     PATH = f'/data_repository/profile/gallery/{gallery_id}/'
-    photos_path = []
-    for photo in photos:
-        photos_path.append(await add_new_image(PATH, photo))
-    if photos_path:
-        photos_path = ",".join(photos_path)
-    else:
-        photos_path = ''
+    photos_path = db_g.photos_path
 
-    db_g = select_gallery(gallery_id)
+    path = ''
+    for photo in photos:
+        path = await add_new_image(PATH, photo)
+        if photos_path:
+            photos_path += ","+path
+
     db_g.photos_path = photos_path
     db.session.commit()
     db.session.refresh(db_g)
@@ -107,10 +107,15 @@ async def delete_gallery_photo(name: str, gallery_id = Depends(auth_wrapper)):
         if not(filename==name):
             print('dentro')
             new_photos_path.append(photo)
+
+    gallery.photos_path = new_photos_path
+    db.session.commit()
+    db.session.refresh(gallery)
+
     return new_photos_path
 
 def select_gallery(gallery_id: int):
-    db_g = db.session.query(ModelGallery).get({"profile_id":gallery_id})
+    db_g = db.session.query(ModelGallery).filter(ModelGallery.profile_id == gallery_id).one()
     if not db_g:
         raise HTTPException(status_code=404, detail="Gallery not found")
 
