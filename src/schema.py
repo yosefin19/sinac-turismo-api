@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from datetime import datetime
+
 
 """
 Se establecen los objetos de transferencia de datos (DTO), esquemas que son utilizados para
@@ -24,7 +26,7 @@ class Profile(BaseModel):
     user_id: int
     profile_photo_path: str
     cover_photo_path: str
-    
+
     class Config:
         orm_mode = True
 
@@ -89,3 +91,58 @@ class Gallery(BaseModel):
     class Config:
         orm_mode = True
 
+class FavoriteArea(BaseModel):
+    """
+        Clase que hereda de BaseModel y hace referencía a un DTO de la información de
+        las áreas favoritas.
+    """
+    id: int
+    user_id: int
+    conservation_area_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class FavoriteDestination(BaseModel):
+    """
+        Clase que hereda de BaseModel y hace referencía a un DTO de la información de
+        los destinos favoritas.
+    """
+    id: int
+    user_id: int
+    tourist_destination_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class VisitedDestination(BaseModel):
+    """
+        Clase que hereda de BaseModel y hace referencía a un DTO de la información de
+        los destinos visitados.
+    """
+    id: int
+    user_id: int
+    tourist_destination_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class Review(BaseModel):
+    """
+        Clase que hereda de BaseModel y hace referencía a un DTO de la información de
+        las opiniones.
+    """
+    id: int
+    title: str
+    text: str
+    date: datetime
+    calification: int
+    image_path: str
+    user_id: int
+    tourist_destination_id: int
+
+    class Config:
+        orm_mode = True

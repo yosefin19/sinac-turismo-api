@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Column, Float, ForeignKey, Boolean
+from sqlalchemy import Integer, String, Column, Float, ForeignKey, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -27,7 +27,7 @@ class Profile(Base):
     phone = Column(String)
     profile_photo_path = Column(String)
     cover_photo_path = Column(String)
-     
+
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship(User)
 
@@ -73,8 +73,80 @@ class TouristDestination(Base):
     end_season = Column(Integer)
     conservation_area_id = Column(Integer, ForeignKey("conservation_area.id"))
 
-    conservation_area = relationship(ConservationArea, backref="tourist_destinations")
+    conservation_area = relationship(
+        ConservationArea, backref="tourist_destinations")
 
+
+class FavoriteArea(Base):
+    """
+        Clase que hereda de Base y hace referencía a un DAO de la información
+        de las áreas favoritas.
+    """
+    __tablename__ = "favorite_area"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    conservation_area_id = Column(
+        Integer, ForeignKey("conservation_area.id"))
+
+    user = relationship(User, backref="favorite_area")
+    conservation_area = relationship(ConservationArea, backref="favorite_area")
+
+
+class FavoriteDestination(Base):
+    """
+        Clase que hereda de Base y hace referencía a un DAO de la información
+        de los destinos favoritos.
+    """
+    __tablename__ = "favorite_destination"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    tourist_destination_id = Column(
+        Integer, ForeignKey("tourist_destination.id"))
+
+    user = relationship(User, backref="favorite_destination")
+    tourist_destination = relationship(
+        TouristDestination, backref="favorite_destination")
+
+
+class VisitedDestination(Base):
+    """
+        Clase que hereda de Base y hace referencía a un DAO de la información
+        de los destinos visitados.
+    """
+    __tablename__ = "visited_destination"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    tourist_destination_id = Column(
+        Integer, ForeignKey("tourist_destination.id"))
+
+    user = relationship(User, backref="visited_destination")
+    tourist_destination = relationship(
+        TouristDestination, backref="visited_destination")
+
+
+class Review(Base):
+    """
+        Clase que hereda de Base y hace referencía a un DAO de la información
+        de las opiniones.
+    """
+    __tablename__ = "review"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    text = Column(String)
+    date = Column(DateTime)
+    calification = Column(Integer)
+    image_path = Column(String)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    tourist_destination_id = Column(
+        Integer, ForeignKey("tourist_destination.id"))
+    
+    user = relationship(User, backref="review")
+    tourist_destination = relationship(TouristDestination, backref="review")
+
+    
 class Gallery(Base):
     __tablename__ = "gallery"
     id = Column(Integer, primary_key=True, index=True)

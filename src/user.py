@@ -55,6 +55,7 @@ def get_users():
     return db_users
 
 
+
 @user.get("/user",response_model=SchemaUser, status_code=status.HTTP_200_OK)
 def get_user(user_id = Depends(auth_wrapper)):
     user = select_user(user_id)
@@ -78,6 +79,7 @@ def add_user(user: SchemaUser):
         db.session.add(db_user)
         db.session.commit()
         return db_user
+
     except:
         raise HTTPException(status_code=400, detail="User already exists")
 
