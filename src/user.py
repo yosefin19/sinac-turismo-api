@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
-from fastapi import status
-from fastapi_sqlalchemy import db
+from typing import List
 
-from src.authentication import verify_password, encode_token, get_password_hash
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi_sqlalchemy import db
+from fastapi import status
+
+from src.authentication import verify_password, encode_token, get_password_hash, auth_wrapper
 from src.models import User as ModelUser
 from src.schema import Authentication as SchemaAuthentication
 from src.schema import User as SchemaUser
@@ -53,8 +55,8 @@ def get_users():
     return db_users
 
 
-@user.get("/users/{user_id}", response_model=SchemaUser, status_code=status.HTTP_200_OK)
-def get_user(user_id: int):
+@user.get("/user",response_model=SchemaUser, status_code=status.HTTP_200_OK)
+def get_user(user_id = Depends(auth_wrapper)):
     user = select_user(user_id)
     return user
 
@@ -80,8 +82,8 @@ def add_user(user: SchemaUser):
         raise HTTPException(status_code=400, detail="User already exists")
 
 
-@user.post("/update-user/{user_id}", response_model=SchemaUser, status_code=status.HTTP_200_OK)
-def update_user(user_id: int, user: SchemaUser):
+@user.post("/update-user}",response_model=SchemaUser, status_code=status.HTTP_200_OK)
+def update_user( user: SchemaUser, user_id = Depends(auth_wrapper) ):
     db_user = select_user(user_id)
 
     if user.password:
@@ -96,8 +98,8 @@ def update_user(user_id: int, user: SchemaUser):
     return db_user
 
 
-@user.delete("/delete-user/{user_id}", status_code=status.HTTP_200_OK)
-async def delete_user(user_id: int):
+@user.delete("/delete-user", status_code=status.HTTP_200_OK)
+async def delete_user(user_id = Depends(auth_wrapper)):
     db_user = select_user(user_id)
 
     db.session.delete(db_user)

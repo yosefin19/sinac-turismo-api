@@ -39,7 +39,7 @@ from src.router.tourist_destination import tourist_destination_router
 from src.router.conservation_area import conservation_area_router
 from src.user import user
 from src.profile import profile
-
+from src.router.gallery import gallery
 
 sinac_turismo_api = FastAPI()
 
@@ -80,6 +80,8 @@ sinac_turismo_api.include_router(user)
 # Se incluyen las rutas de los perfiles
 sinac_turismo_api.include_router(profile)
 
+# Se incluyen las rutas de la galerua
+sinac_turismo_api.include_router(gallery)
 
 if __name__ == "__main__":
     uvicorn.run(sinac_turismo_api, host="0.0.0.0", port=8000, reload=True)

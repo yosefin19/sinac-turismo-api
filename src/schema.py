@@ -21,11 +21,10 @@ class Profile(BaseModel):
     id: int
     name: str
     phone: str
-    email: str
     user_id: int
     profile_photo_path: str
     cover_photo_path: str
-
+    
     class Config:
         orm_mode = True
 
@@ -80,3 +79,13 @@ class ConservationArea(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class Gallery(BaseModel):
+    id: int
+    profile_id: int
+    photos_path : str
+
+    class Config:
+        orm_mode = True
+
