@@ -244,3 +244,14 @@ def delete_favorite_area(favorite_area_id: int, user_id=Depends(auth_wrapper)):
     db.session.delete(db_favorite_area)
     db.session.commit()
     return True
+
+
+@profile.get("/users/all/auth-profiles/", response_model=SchemaProfile, status_code=status.HTTP_200_OK)
+def get_authenticated_profile(user_id=Depends(auth_wrapper)):
+
+    profiles = db.session.query(ModelProfile).filter(
+        ModelProfile.user_id == user_id).all()
+    if len(profiles) != 0:
+        return profiles[0]
+
+    raise HTTPException(status_code=404, detail="Profile not found")
