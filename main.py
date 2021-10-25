@@ -68,13 +68,11 @@ sinac_turismo_api.add_middleware(
 async def root():
     return {'message': "SINAC Turismo API"}
 
-
+# Se incluyen las rutas de las áreas de conservación
+sinac_turismo_api.include_router(conservation_area_router)
 
 # Se incluyen las rutas de los destinos turisticos
 sinac_turismo_api.include_router(tourist_destination_router)
-
-# Se incluyen las rutas de las áreas de conservación
-sinac_turismo_api.include_router(conservation_area_router)
 
 # Se incluyen las rutas de los usuarios
 sinac_turismo_api.include_router(user)

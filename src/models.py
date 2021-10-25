@@ -13,16 +13,15 @@ Base = declarative_base()
 
 
 class User(Base):
-    __tablename__= "user"
+    __tablename__ = "user"
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String)
+    email = Column(String, unique=True)
     password = Column(String)
     admin = Column(Boolean)
 
 
-
 class Profile(Base):
-    __tablename__= "profile"
+    __tablename__ = "profile"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     phone = Column(String)
@@ -77,9 +76,10 @@ class TouristDestination(Base):
     conservation_area = relationship(ConservationArea, backref="tourist_destinations")
 
 class Gallery(Base):
-    __tablename__ = "Gallery"
+    __tablename__ = "gallery"
     id = Column(Integer, primary_key=True, index=True)
     photos_path = Column(String)
     
     profile_id = Column(Integer, ForeignKey("profile.id"))
     profile = relationship(Profile)
+

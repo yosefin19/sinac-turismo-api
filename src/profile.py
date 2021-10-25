@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi_sqlalchemy import db
 from fastapi import status, File, UploadFile
-from src.authentication import auth_wrapper
 
+from src.authentication import auth_wrapper
 from src.models import Profile as ModelProfile
 from src.schema import Profile as SchemaProfile
 from PIL import Image
@@ -21,6 +21,7 @@ def get_profile():
     return db_profiles
 
 
+
 @profile.get("/profile",response_model=SchemaProfile, status_code=status.HTTP_200_OK)
 def get_profile(profile_id = Depends(auth_wrapper)):
     profile = select_profile(profile_id)
@@ -36,18 +37,15 @@ def select_profile(profile_id: int):
 
     return db_profile
 
+
 @profile.post("/add-profile", response_model=SchemaProfile, status_code=status.HTTP_201_CREATED)
 def add_profile(profile: SchemaProfile):
-
     db_profile = ModelProfile(name = profile.name, phone = profile.phone,
     profile_photo_path = '/', cover_photo_path = '/',  user_id = profile.user_id)
 
     db.session.add(db_profile)
     db.session.commit()
-    
-    print(db_profile)
     return db_profile
-
 
 
 @profile.post("/update-profile",response_model=SchemaProfile, status_code=status.HTTP_200_OK)
@@ -63,6 +61,7 @@ def update_profile(profile: SchemaProfile, profile_id = Depends(auth_wrapper)):
     if(profile.cover_photo_path):
         db_profile.cover_photo_path = profile.cover_photo_path
 
+
     db.session.commit()
     db.session.refresh(db_profile)
     return db_profile
@@ -77,14 +76,14 @@ async def delete_profile(profile_id = Depends(auth_wrapper)):
 
     db.session.delete(db_profile)
     db.session.commit()
-    return True 
+    return True
 
 
 async def reduce_image_size(image_path):
-
     image_path = os.getcwd() + image_path
     image = Image.open(image_path)
     image.save(image_path, optimize=True, quality=70)
+
 
 @profile.get("/profiles/photo/{type}", status_code=status.HTTP_200_OK)
 async def get_photo(type, profile_id = Depends(auth_wrapper)):
@@ -103,7 +102,6 @@ async def get_photo(type, profile_id = Depends(auth_wrapper)):
 
 @profile.post("/profiles/photo/{type}", status_code=status.HTTP_200_OK)
 async def add_photo(type:str, image: UploadFile = File(...), profile_id = Depends(auth_wrapper)):
-
     db_profile = select_profile(profile_id)
 
     filename = image.filename
@@ -124,7 +122,7 @@ async def add_photo(type:str, image: UploadFile = File(...), profile_id = Depend
         file.write(image_content)
     await reduce_image_size(path)
     file.close()
-    
+
     if(type == 'profile'):
         db_profile.profile_photo_path =  path
     if(type == 'cover'):
@@ -157,5 +155,4 @@ async def delete_photo(type, profile_id = Depends(auth_wrapper)):
             return profile_id
             
     raise HTTPException(status_code=404, detail="File not found")
-
 
