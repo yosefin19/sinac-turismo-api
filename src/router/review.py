@@ -114,29 +114,36 @@ async def add_review_image(tourist_destination_id: int, image: UploadFile = File
     return photo_path
 
 
-@review_router.patch("/tourist-destination/{tourist_destination_id}/review/{review_id}",
+@review_router.patch("/tourist-destination/{tourist_destination_id}/update-review",
                      response_model=SchemaReview, status_code=status.HTTP_200_OK)
-def update_review(review_id: int, review: SchemaReview):
+def update_review(tourist_destination_id: int, review: SchemaReview, user_id=Depends(auth_wrapper)):
     """
     Ruta para actualizar los datos de una opinión.
     :param review_id: identificador de la opinión.
     :param review: DTO con los nuevos datos.
     :return db_review: DAO con los datos actualizados.
     """
-    db_review = select_review(review_id)
-    if not db_review:
-        raise HTTPException(status_code=404, detail="Item not found")
+    print("Review", type(review))
+    db_review = select_review_by_user(tourist_destination_id, user_id)
 
     update_data = review.dict(exclude_unset=True)
 
+    # if usuario
     # update photos
 
-    for key, value in update_data.items():
-        setattr(db_review, key, value)
+    #for key, value in update_data.items():
+    #    setattr(db_review, key, value)
+
+    db_review.title = update_data.get("title")
+    db_review.text = update_data.get("text")
+    db_review.date = datetime.now()
+    db_review.calification = update_data.get("calification")
+    db_review.image_path = update_data.get("image_path")
 
     db.session.add(db_review)
     db.session.commit()
     db.session.refresh(db_review)
+    db_review.date = datetime.now()
     return db_review
 
 
