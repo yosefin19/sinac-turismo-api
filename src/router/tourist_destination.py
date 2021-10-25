@@ -5,7 +5,6 @@ from fastapi_sqlalchemy import db
 from fastapi import File, UploadFile, status, Depends
 
 from src.models import TouristDestination as ModelTouristDestination
-from src.models import ConservationArea as ModelConservationArea
 from src.schema import TouristDestination as SchemaTouristDestination
 
 from src.models import FavoriteDestination as ModelFavoriteDestination
@@ -177,7 +176,6 @@ async def delete_tourist_destination(tourist_destination_id: int):
 
     db.session.delete(db_tourist_destination)
     db.session.commit()
-    # db_tourist_destination HTTPException(status_code=200, detail="ok")
     return True
 
 
@@ -355,3 +353,42 @@ def delete_visited_destination(visited_destination_id: int, user_id=Depends(auth
     db.session.delete(db_visited_destination)
     db.session.commit()
     return True
+
+@tourist_destination_router.get("/tourist-destination/conservation-area/{conservation_area_id}")
+def get_tourist_destination_by_conservation_area_id(conservation_area_id: int):
+    """
+    Ruta que resuelve todos los destinos turísticos que pertenecen a
+    una misma área de conservación.
+    param: conservation_area_id: identificador del área de conservación a obtener los destinos.
+    return: arreglo con los destinos asociados al área.
+    """
+    tourist_destinations = db.session.query(ModelTouristDestination).\
+        filter(ModelTouristDestination.conservation_area_id == conservation_area_id).all()
+    return tourist_destinations
+
+
+@tourist_destination_router.get("/tourist-destination/season/{current_month}")
+async def get_tourist_destinations_of_season(current_month: int):
+    """
+    Ruta utilizada para obtener los destinos que se encuentren en temporada en un
+    mes en especifico del año, los destinos tienen un mes de inicio y finalización
+    de temporada, por lo que se valida si inicia y finaliza un mismo año o no.
+    param: current_month: número del mes actual del año
+    return: arreglo con los destinos que se encuentren en temporada
+    raise: error HTTP 400 si el número de mes actual es mayor a 12.
+    """
+    if current_month > 12:
+        raise HTTPException(status_code=400, detail="Bad Request, month < 12")
+    tourist_destinations = db.session.query(ModelTouristDestination).all()
+    response = []
+    for destination in tourist_destinations:
+        init_month = destination.start_season
+        final_month = destination.end_season
+        if init_month == current_month or final_month == current_month:
+            response.append(destination)
+        elif init_month < current_month < final_month:
+            response.append(destination)
+        elif final_month < init_month and not(final_month < current_month < init_month):
+            response.append(destination)
+    return response
+

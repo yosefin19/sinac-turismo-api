@@ -2,6 +2,7 @@ from sqlalchemy import Integer, String, Column, Float, ForeignKey, Boolean, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
+
 """
 Se establecen los Objetos de acceso a datos (DAO), modelos los cuales son utilizados para almacenar
 los datos que se almacenan en la base de datos. Se útiliza la biblioteca de Python sqlalchemy para 
@@ -24,7 +25,8 @@ class Profile(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     phone = Column(String)
-    email = Column(String)
+    profile_photo_path = Column(String)
+    cover_photo_path = Column(String)
 
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship(User)
@@ -131,7 +133,6 @@ class Review(Base):
         de las opiniones.
     """
     __tablename__ = "review"
-
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     text = Column(String)
@@ -141,6 +142,16 @@ class Review(Base):
     user_id = Column(Integer, ForeignKey("user.id"))
     tourist_destination_id = Column(
         Integer, ForeignKey("tourist_destination.id"))
-
+    
     user = relationship(User, backref="review")
     tourist_destination = relationship(TouristDestination, backref="review")
+
+    
+class Gallery(Base):
+    __tablename__ = "gallery"
+    id = Column(Integer, primary_key=True, index=True)
+    photos_path = Column(String)
+    
+    profile_id = Column(Integer, ForeignKey("profile.id"))
+    profile = relationship(Profile)
+

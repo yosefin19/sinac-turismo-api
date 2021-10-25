@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-# from typing import Optional
 from datetime import datetime
+
 
 """
 Se establecen los objetos de transferencia de datos (DTO), esquemas que son utilizados para
@@ -23,8 +23,9 @@ class Profile(BaseModel):
     id: int
     name: str
     phone: str
-    email: str
     user_id: int
+    profile_photo_path: str
+    cover_photo_path: str
 
     class Config:
         orm_mode = True
@@ -81,6 +82,14 @@ class ConservationArea(BaseModel):
     class Config:
         orm_mode = True
 
+
+class Gallery(BaseModel):
+    id: int
+    profile_id: int
+    photos_path : str
+
+    class Config:
+        orm_mode = True
 
 class FavoriteArea(BaseModel):
     """
