@@ -3,8 +3,10 @@ alembic==1.6.5
 appdirs==1.4.4
 asgiref==3.3.4
 backports.entry-points-selectable==1.1.0
+bcrypt==3.2.0
 black==21.6b0
 certifi==2021.5.30
+cffi==1.15.0
 click==8.0.1
 colorama==0.4.4
 distlib==0.3.2
@@ -16,12 +18,15 @@ h11==0.12.0
 Mako==1.1.4
 MarkupSafe==2.0.1
 mypy-extensions==0.4.3
+passlib==1.7.4
 pathspec==0.8.1
 Pillow==8.3.2
 pipenv==2021.5.29
 platformdirs==2.3.0
 psycopg2-binary==2.9.1
+pycparser==2.20
 pydantic==1.8.2
+PyJWT==2.3.0
 python-dateutil==2.8.1
 python-dotenv==0.18.0
 python-editor==1.0.4
@@ -35,4 +40,3 @@ typing-extensions==3.10.0.0
 uvicorn==0.14.0
 virtualenv==20.4.7
 virtualenv-clone==0.5.4
-bcrypt==3.2.0
