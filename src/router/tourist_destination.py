@@ -2,13 +2,20 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 from fastapi_sqlalchemy import db
-from fastapi import File, UploadFile, status
+from fastapi import File, UploadFile, status, Depends
 
 from src.models import TouristDestination as ModelTouristDestination
 from src.models import ConservationArea as ModelConservationArea
 from src.schema import TouristDestination as SchemaTouristDestination
 
+from src.models import FavoriteDestination as ModelFavoriteDestination
+from src.schema import FavoriteDestination as SchemaFavoriteDestination
+from src.models import VisitedDestination as ModelVisitedDestination
+from src.schema import VisitedDestination as SchemaVisitedDestination
+
 from src import repository
+
+from src.authentication import auth_wrapper
 
 tourist_destination_router = APIRouter()
 
@@ -20,7 +27,8 @@ def select_tourist_destination(tourist_destination_id: int):
     :return db_tourist_destination: DAO de un área de conservación.
     :raise: HTTPException: no se encontro el identificador.
     """
-    db_tourist_destination = db.session.query(ModelTouristDestination).get(tourist_destination_id)
+    db_tourist_destination = db.session.query(
+        ModelTouristDestination).get(tourist_destination_id)
     if db_tourist_destination is None:
         raise HTTPException(status_code=404, detail="Item not found")
     return db_tourist_destination
@@ -169,4 +177,181 @@ async def delete_tourist_destination(tourist_destination_id: int):
 
     db.session.delete(db_tourist_destination)
     db.session.commit()
-    return True  # db_tourist_destination HTTPException(status_code=200, detail="ok")
+    # db_tourist_destination HTTPException(status_code=200, detail="ok")
+    return True
+
+
+def select_favorite_destination(favorite_destination_id: int):
+    """
+    Función para buscar la información de un destino marcado como favorito para un usuario.
+    :param favorite_destination_id: Identificador de la relación.
+    :return db_favorite_destination: Información del destino marcada como favorito.
+    """
+    db_favorite_destination = db.session.query(
+        ModelFavoriteDestination).get(favorite_destination_id)
+    if db_favorite_destination is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return db_favorite_destination
+
+
+@tourist_destination_router.get('/tourist-destination/all/favorite')
+# def get_favorite_destinations(user_id=Depends(auth_wrapper)):
+def get_favorite_destinations():
+    """
+    Función para buscar los destinos favoritos de un usuario.
+    :param user_id: Identificador del usuario.
+    :return tourist_destinations: Lista de destinos favoritos.
+    """
+    user_id = 1
+    favorite_destinations = []
+    for favorite_destination in db.session.query(ModelFavoriteDestination).filter(ModelFavoriteDestination.user_id == user_id).all():
+        favorite_destinations.append(favorite_destination)
+
+    def getIds(item):
+        return [item.tourist_destination_id, item.id]
+    favorite_destinations_id = list(map(getIds, favorite_destinations))
+
+    tourist_destinations = []
+    for tourist_destination in db.session.query(ModelTouristDestination).all():
+        for i in range(len(favorite_destinations_id)):
+            if tourist_destination.id == favorite_destinations_id[i][0]:
+                tourist_destination.favorite_id = favorite_destinations_id[i][1]
+                tourist_destinations.append(tourist_destination)
+                break
+    return tourist_destinations
+
+
+@tourist_destination_router.get('/tourist-destination/{tourist_destination_id}/favorite')
+def get_favorite_destination_id(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
+    """
+    Función para identificar si un destino está marcado como favorito.
+    :param tourist_destination_id: Identificador del destino turístico.
+    :param user_id: Identificador del usuario.
+    :return El identificador de la relación o cero.
+    """
+    for favorite_destination in db.session.query(ModelFavoriteDestination).filter(ModelFavoriteDestination.user_id == user_id).all():
+        if (favorite_destination.tourist_destination_id == tourist_destination_id):
+            return favorite_destination.id
+
+    return 0
+
+
+@tourist_destination_router.post('/tourist-destination/{tourist_destination_id}/favorite', response_model=SchemaFavoriteDestination, status_code=status.HTTP_201_CREATED)
+def add_favorite_destination(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
+    """
+    Ruta utilizada para agregar información de un nuevo destino favorito.
+    :param tourist_destination_id: Identificador del destino turístico.
+    :param user_id: Identificador del usuario.
+    :return: DAO de un destino turístico con los datos actualizados.
+    """
+    db_favorite_destination = ModelFavoriteDestination(user_id=user_id,
+                                                       tourist_destination_id=tourist_destination_id)
+
+    db.session.add(db_favorite_destination)
+    db.session.commit()
+    return db_favorite_destination
+
+
+@tourist_destination_router.delete('/tourist-destination/all/favorite/{favorite_destination_id}', status_code=status.HTTP_200_OK)
+def delete_favorite_destination(favorite_destination_id: int, user_id=Depends(auth_wrapper)):
+    """
+    Ruta utilizada para eliminar un destino favorita.
+    :param user_id: Identificador del usuario.
+    :return boolean: Verdadero si fue correctamente eliminado.
+    """
+    db_favorite_destination = select_favorite_destination(
+        favorite_destination_id)
+    if(db_favorite_destination.user_id != user_id):
+        return False
+
+    db.session.delete(db_favorite_destination)
+    db.session.commit()
+    return True
+
+
+def select_visited_destination(visited_destination_id: int):
+    """
+    Función para buscar la información de un destino marcado como visitado para un usuario.
+    :param visited_destination_id: Identificador de la relación.
+    :return db_visited_destination: Información del destino marcada como visitado.
+    """
+    db_visited_destination = db.session.query(
+        ModelVisitedDestination).get(visited_destination_id)
+    if db_visited_destination is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return db_visited_destination
+
+
+@tourist_destination_router.get('/tourist-destination/all/visited')
+# def get_visited_destinations(user_id=Depends(auth_wrapper)):
+def get_visited_destinations():
+    """
+    Función para buscar los destinos visitados por un usuario.
+    :param user_id: Identificador del usuario.
+    :return tourist_destinations: Lista de destinos visitados.
+    """
+    user_id = 1
+    visited_destinations = []
+    for visited_destination in db.session.query(ModelVisitedDestination).filter(ModelVisitedDestination.user_id == user_id).all():
+        visited_destinations.append(visited_destination)
+
+    def getIds(item):
+        return [item.tourist_destination_id, item.id]
+    visited_destinations_id = list(map(getIds, visited_destinations))
+
+    tourist_destinations = []
+    for tourist_destination in db.session.query(ModelTouristDestination).all():
+        for i in range(len(visited_destinations_id)):
+            if tourist_destination.id == visited_destinations_id[i][0]:
+                tourist_destination.visited_id = visited_destinations_id[i][1]
+                tourist_destinations.append(tourist_destination)
+                break
+    return tourist_destinations
+
+
+@tourist_destination_router.get('/tourist-destination/{tourist_destination_id}/visited')
+def get_visited_destination_id(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
+    """
+    Función para identificar si un destino está marcado como visitado.
+    :param tourist_destination_id: Identificador del destino turístico.
+    :param user_id: Identificador del usuario.
+    :return El identificador de la relación o cero.
+    """
+    for favorite_destination in db.session.query(ModelVisitedDestination).filter(ModelVisitedDestination.user_id == user_id).all():
+        if (favorite_destination.tourist_destination_id == tourist_destination_id):
+            return favorite_destination.id
+
+    return 0
+
+
+@tourist_destination_router.post('/tourist-destination/{tourist_destination_id}/visited', response_model=SchemaVisitedDestination, status_code=status.HTTP_201_CREATED)
+def add_visited_destination(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
+    """
+    Ruta utilizada para agregar información de un nuevo destino favorito.
+    :param tourist_destination_id: Identificador del destino turístico.
+    :param user_id: Identificador del usuario.
+    :return: DAO de un destino turístico con los datos actualizados.
+    """
+    db_visited_destination = ModelVisitedDestination(user_id=user_id,
+                                                     tourist_destination_id=tourist_destination_id)
+
+    db.session.add(db_visited_destination)
+    db.session.commit()
+    return db_visited_destination
+
+
+@tourist_destination_router.delete('/tourist-destination/all/visited/{visited_destination_id}', status_code=status.HTTP_200_OK)
+def delete_visited_destination(visited_destination_id: int, user_id=Depends(auth_wrapper)):
+    """
+    Ruta utilizada para eliminar un destino favorita.
+    :param user_id: Identificador del usuario.
+    :return boolean: Verdadero si fue correctamente eliminado.
+    """
+    db_visited_destination = select_visited_destination(
+        visited_destination_id)
+    if(db_visited_destination.user_id != user_id):
+        return False
+
+    db.session.delete(db_visited_destination)
+    db.session.commit()
+    return True

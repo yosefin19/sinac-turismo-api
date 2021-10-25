@@ -1,5 +1,6 @@
 
 
+from src.authentication import get_password_hash
 from typing import List
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +12,7 @@ from src.schema import User as SchemaUser
 
 user = APIRouter()
 
+
 @user.get("/users", status_code=status.HTTP_200_OK)
 def get_users():
     db_users = db.session.query(ModelUser).all()
@@ -19,7 +21,7 @@ def get_users():
     return db_users
 
 
-@user.get("/users/{user_id}",response_model=SchemaUser, status_code=status.HTTP_200_OK)
+@user.get("/users/{user_id}", response_model=SchemaUser, status_code=status.HTTP_200_OK)
 def get_user(user_id: int):
     user = select_user(user_id)
     return user
@@ -34,22 +36,28 @@ def select_user(user_id: int):
 
 @user.post("/add-user", response_model=SchemaUser, status_code=status.HTTP_201_CREATED)
 def add_user(user: SchemaUser):
-    #hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
-    db_user = ModelUser(email=user.email, password=user.password, admin=user.admin)
-    db.session.add(db_user)
-    db.session.commit()
-    return db_user
+    try:
+        hashed_password = get_password_hash(user.password)
+
+        db_user = ModelUser(
+            email=user.email, password=hashed_password, admin=user.admin)
+        db.session.add(db_user)
+        db.session.commit()
+        return db_user
+
+    except:
+        raise HTTPException(status_code=400, detail="User already exists")
 
 
-@user.post("/update-user/{user_id}",response_model=SchemaUser, status_code=status.HTTP_200_OK)
+@user.post("/update-user/{user_id}", response_model=SchemaUser, status_code=status.HTTP_200_OK)
 def update_user(user_id: int, user: SchemaUser):
 
     db_user = select_user(user_id)
 
     if(user.password):
         #hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
-        db_user.password = user.password# hashed_password
-    if(user.email ):
+        db_user.password = user.password  # hashed_password
+    if(user.email):
         db_user.email = user.email
     db_user.admin = user.admin
 
@@ -64,7 +72,4 @@ async def delete_user(user_id: int):
 
     db.session.delete(db_user)
     db.session.commit()
-    return True 
-
-
-
+    return True
