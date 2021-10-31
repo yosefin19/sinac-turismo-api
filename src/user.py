@@ -84,7 +84,7 @@ def add_user(user: SchemaUser):
         raise HTTPException(status_code=400, detail="User already exists")
 
 
-@user.post("/update-user}",response_model=SchemaUser, status_code=status.HTTP_200_OK)
+@user.post("/update-user",response_model=SchemaUser, status_code=status.HTTP_200_OK)
 def update_user( user: SchemaUser, user_id = Depends(auth_wrapper) ):
     db_user = select_user(user_id)
 
