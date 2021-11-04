@@ -1,3 +1,4 @@
+from src import repository
 from typing import List
 from datetime import datetime
 
@@ -32,45 +33,50 @@ def select_review(review_id: int):
     db_review.date = formatDate(db_review.date)
     return db_review
 
-
-@review_router.get('/tourist-destination/{tourist_destination_id}/reviews', response_model=SchemaReview, status_code=status.HTTP_200_OK)
-def get_user_review(tourist_destination_id: int):  # user_id=Depends(auth_wrapper)
+def select_review_by_user(tourist_destination_id: int, user_id: int):
     """
-    Función para buscar la opinión de un usuario en un destino.
-    :user_id: Identificador del usuario.
+    Función para buscar la información de la opinión de un usuario a partir de su identificador.
     :param tourist_destination_id: Identificador del destino.
-    :return review: Opinión del destino.
+    :param user_id: Identificador del usuario.
+    :return db_favorites_area_id: Información de la opinión.
     """
-    user_id = 1
-
     for review in db.session.query(ModelReview).filter(ModelReview.user_id == user_id).all():
         if (review.tourist_destination_id == tourist_destination_id):
+            review.date = datetime.now()#formatDate(review.date)
             return review
 
     raise HTTPException(status_code=404, detail="Item not found")
 
+@review_router.get('/tourist-destination/{tourist_destination_id}/user-review', response_model=SchemaReview, status_code=status.HTTP_200_OK)
+def get_user_review(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
+    """
+    Función para buscar la opinión de un usuario en un destino.
+    :param user_id: Identificador del usuario.
+    :param tourist_destination_id: Identificador del destino.
+    :return review: Opinión del destino.
+    """
+    review = select_review_by_user(tourist_destination_id, user_id)
+    return review
 
-@review_router.get('/tourist-destination/{tourist_destination_id}/review')
+
+@review_router.get('/tourist-destination/{tourist_destination_id}/reviews')
 def get_reviews(tourist_destination_id: int):
     """
     Función para buscar las opiniones de un destino.
     :param tourist_destination_id: Identificador del destino.
     :return reviews: Lista de opiniones del destino.
     """
-    # average = 0
     reviews = db.session.query(ModelReview).filter(
         ModelReview.tourist_destination_id == tourist_destination_id).order_by(ModelReview.date.desc()).all()
 
     for review in reviews:
         review.date = formatDate(review.date)
-    # average /= reviews.len()
 
     return reviews
 
 
-@review_router.post('/tourist-destination/{tourist_destination_id}/review', response_model=SchemaReview, status_code=status.HTTP_201_CREATED)
-def add_review(tourist_destination_id: int, review: SchemaReview):
-    # def add_review(tourist_destination_id: int, review: SchemaReview, user_id=Depends(auth_wrapper)):
+@review_router.post('/tourist-destination/{tourist_destination_id}/user-review', response_model=SchemaReview, status_code=status.HTTP_201_CREATED)
+def add_review(tourist_destination_id: int, review: SchemaReview, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para agregar información de una nueva opinión.
     :param tourist_destination_id: Identificador del destino turístico.
@@ -78,20 +84,14 @@ def add_review(tourist_destination_id: int, review: SchemaReview):
     :param user_id: Identificador del usuario.
     :return: DAO de un destino turístico con los datos actualizados.
     """
-
-    user_id = 1
-
-    # Photos
-
     db_review = ModelReview(title=review.title,
                             text=review.text,
-                            date=datetime.now(),  # .strftime("%Y-%m-%dT%H:%M:00Z"),
+                            date=datetime.now(),
                             calification=review.calification,
-                            image_path=review.image_path,
+                            image_path=review.image_path,#photos_path,
                             user_id=user_id,
                             tourist_destination_id=tourist_destination_id)
 
-    print(db_review.date)
     db.session.add(db_review)
     db.session.commit()
     db_review.date = datetime.now()
@@ -99,8 +99,7 @@ def add_review(tourist_destination_id: int, review: SchemaReview):
 
 
 @review_router.post('/tourist-destination/{tourist_destination_id}/review-image')
-async def add_review_image(tourist_destination_id: int, image: UploadFile = File(...)):
-    # def add_review(tourist_destination_id: int, review: SchemaReview, user_id=Depends(auth_wrapper)):
+async def add_review_image(tourist_destination_id: int, image: UploadFile = File(...), user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para agregar una imagen a una nueva opinión.
     :param tourist_destination_id: Identificador del destino turístico.
@@ -108,7 +107,6 @@ async def add_review_image(tourist_destination_id: int, image: UploadFile = File
     :param user_id: Identificador del usuario.
     :return: Path de la imagen almacenada.
     """
-
     new_directory_name = f'{tourist_destination_id}-{user_id}_dir'
     photo_path = await repository.add_review_photo(new_directory_name, image)
     return photo_path
@@ -123,7 +121,6 @@ def update_review(tourist_destination_id: int, review: SchemaReview, user_id=Dep
     :param review: DTO con los nuevos datos.
     :return db_review: DAO con los datos actualizados.
     """
-    print("Review", type(review))
     db_review = select_review_by_user(tourist_destination_id, user_id)
 
     update_data = review.dict(exclude_unset=True)
@@ -147,7 +144,7 @@ def update_review(tourist_destination_id: int, review: SchemaReview, user_id=Dep
     return db_review
 
 
-@review_router.delete('/tourist-destination/{tourist_destination_id}/review/{review_id}', status_code=status.HTTP_200_OK)
+@review_router.delete('/tourist-destination/{tourist_destination_id}/user-review/{review_id}', status_code=status.HTTP_200_OK)
 def delete_review(review_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para eliminar un destino favorita.
