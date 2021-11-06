@@ -52,7 +52,6 @@ def add_profile(profile: SchemaProfile):
 @profile.post("/update-profile", response_model=SchemaProfile, status_code=status.HTTP_200_OK)
 def update_profile(profile: SchemaProfile, profile_id=Depends(auth_wrapper)):
     db_profile = select_profile(profile_id)
-    print(profile)
     if (profile.name):
         db_profile.name = profile.name
     if (profile.phone):
