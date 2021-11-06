@@ -20,9 +20,7 @@ LOW_CASE_CHARACTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm
 UP_CASE_CHARACTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'M', 'N', 'O', 'p', 'Q', 'R', 'S', 'T',
                       'U', 'V', 'W', 'X', 'Y', 'Z']
 
-SYMBOLS = [".", ",", "*"]#['@', '#', '$', '%', '=', ':', '?', '.', '/', '|', '~', '>', '*', '(', ')', '<']
-
-ALPHABET = DIGITS + UP_CASE_CHARACTERS + LOW_CASE_CHARACTERS + SYMBOLS
+ALPHABET = DIGITS + UP_CASE_CHARACTERS + LOW_CASE_CHARACTERS
 
 
 def new_password_generator():
@@ -35,8 +33,7 @@ def new_password_generator():
     random_digit = random.choice(DIGITS)
     random_up_letter = random.choice(UP_CASE_CHARACTERS)
     random_low_letter = random.choice(LOW_CASE_CHARACTERS)
-    random_symbol = random.choice(SYMBOLS)
-    generate_password = f"{random_digit}{random_up_letter}{random_low_letter}{random_symbol}"
+    generate_password = f"{random_digit}{random_up_letter}{random_low_letter}"
     password_list = list()
     for x in range(PASSWORD_LEN):
         # se selecciona un caracter del alfabeto
