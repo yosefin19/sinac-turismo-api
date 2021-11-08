@@ -170,14 +170,12 @@ def select_favorite_area(favorite_area_id: int):
 
 
 @conservation_area_router.get('/conservation-area/all/favorite')
-# def get_favorite_areas(user_id=Depends(auth_wrapper)):
-def get_favorite_areas():
+def get_favorite_areas(user_id=Depends(auth_wrapper)):
     """
     Función para buscar las áreas favoritas de un usuario.
     :param user_id: Identificador del usuario.
     :return db_favorites_area: Lista de áreas.
     """
-    user_id = 1
     favorite_areas = []
     for favorite_area in db.session.query(ModelFavoriteArea).filter(ModelFavoriteArea.user_id == user_id).all():
         favorite_areas.append(favorite_area)
