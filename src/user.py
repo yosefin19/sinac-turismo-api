@@ -6,6 +6,8 @@ from fastapi import status
 
 from src.authentication import verify_password, encode_token, get_password_hash, auth_wrapper
 from src.models import User as ModelUser
+from src.profile import select_profile_by_user_id
+from src.reset_password import new_password_generator, send_email
 from src.schema import Authentication as SchemaAuthentication
 from src.schema import User as SchemaUser
 
@@ -27,6 +29,33 @@ def select_user_by_email(email: str):
         return db_user
     except:
         raise HTTPException(status_code=400, detail="User not found")
+
+
+@user.post("/find-user", status_code=status.HTTP_200_OK)
+def find_profile_by_email(auth: SchemaAuthentication):
+    """
+    Ruta para obtener el perfil de un usuario, apartir del correo de un usuario.
+    param: auth: credenciales con el correo del usuario.
+    return: esquema con el perfil del usuario
+    raise: Error no se encuentra un usuario
+    """
+    db_user = select_user_by_email(auth.email)
+    if db_user is None:
+        return HTTPException(status_code=400, detail="Email not found")
+    return select_profile_by_user_id(db_user.id)
+
+
+@user.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(auth: SchemaAuthentication):
+    db_user = select_user_by_email(auth.email)
+    if db_user is None:
+        return HTTPException(status_code=400, detail="Email not found")
+    new_password = new_password_generator()
+    hashed_password = get_password_hash(new_password)
+    db_user.password = hashed_password
+    db.session.commit()
+    db.session.refresh(db_user)
+    return await send_email(db_user.email, {"password": new_password})
 
 
 @user.post("/login", status_code=status.HTTP_200_OK)
@@ -55,9 +84,8 @@ def get_users():
     return db_users
 
 
-
-@user.get("/user",response_model=SchemaUser, status_code=status.HTTP_200_OK)
-def get_user(user_id = Depends(auth_wrapper)):
+@user.get("/user", response_model=SchemaUser, status_code=status.HTTP_200_OK)
+def get_user(user_id=Depends(auth_wrapper)):
     user = select_user(user_id)
     return user
 
@@ -84,8 +112,8 @@ def add_user(user: SchemaUser):
         raise HTTPException(status_code=400, detail="User already exists")
 
 
-@user.post("/update-user",response_model=SchemaUser, status_code=status.HTTP_200_OK)
-def update_user( user: SchemaUser, user_id = Depends(auth_wrapper) ):
+@user.post("/update-user", response_model=SchemaUser, status_code=status.HTTP_200_OK)
+def update_user(user: SchemaUser, user_id=Depends(auth_wrapper)):
     db_user = select_user(user_id)
 
     if user.password:
@@ -101,7 +129,7 @@ def update_user( user: SchemaUser, user_id = Depends(auth_wrapper) ):
 
 
 @user.delete("/delete-user", status_code=status.HTTP_200_OK)
-async def delete_user(user_id = Depends(auth_wrapper)):
+async def delete_user(user_id=Depends(auth_wrapper)):
     db_user = select_user(user_id)
 
     db.session.delete(db_user)
