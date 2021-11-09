@@ -4,9 +4,11 @@ from PIL import Image
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi import status, File, UploadFile
 from fastapi_sqlalchemy import db
+from datetime import date
 
 from src.authentication import auth_wrapper
-from src.models import Profile as ModelProfile
+from src.router.tourist_destination import *
+from src.models import FavoriteDestination, Profile as ModelProfile, VisitedDestination
 from src.schema import Profile as SchemaProfile
 
 profile = APIRouter()
@@ -176,3 +178,71 @@ def get_authenticated_profile(user_id=Depends(auth_wrapper)):
         return profiles[0]
 
     raise HTTPException(status_code=404, detail="Profile not found")
+
+@profile.delete("/profiles/photo", status_code=status.HTTP_200_OK)
+async def delete_photo(type, profile_id=Depends(auth_wrapper)):
+    directory_name = f'{type}'
+    PATH = f'/data_repository/profile/{directory_name}'
+    db_profile = select_profile(profile_id)
+
+    path = os.getcwd() + PATH
+
+    for ext in EXTENSIONS:
+        pathE = path + '.' + ext
+        if os.path.exists(pathE):
+            os.remove(pathE)
+            if (type == 'profile'):
+                db_profile.profile_photo_path = "/"
+            if (type == 'cover'):
+                db_profile.cover_photo_path = "/"
+
+            db.session.commit()
+            db.session.refresh(db_profile)
+            return profile_id
+
+    raise HTTPException(status_code=404, detail="File not found")
+
+
+@profile.get("/users/all/auth-profiles/", response_model=SchemaProfile, status_code=status.HTTP_200_OK)
+def get_authenticated_profile(user_id=Depends(auth_wrapper)):
+    profiles = db.session.query(ModelProfile).filter(
+        ModelProfile.user_id == user_id).all()
+    if len(profiles) != 0:
+        return profiles[0]
+
+    raise HTTPException(status_code=404, detail="Profile not found")
+
+@profile.get("/profile/recommendation/")
+async def recommendation(user_id=Depends(auth_wrapper)):
+    favorite = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id).all()
+    if(favorite):
+        beach = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_beach == True).all()
+        volcano = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_volcano == True).all()
+        forest = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_forest == True).all()
+        mountain = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_mountain == True).all()
+        maxi = max(beach, volcano, forest, mountain)
+
+        tourist_destinations = []
+        if(maxi==beach):
+            tourist_destinations.extend(db.session.query(ModelTouristDestination).\
+            filter(ModelTouristDestination.is_beach == True).all()[:3])
+        if(maxi==volcano):
+            tourist_destinations.extend(db.session.query(ModelTouristDestination).\
+            filter(ModelTouristDestination.is_volcano == True).all()[:3])
+        if(maxi==forest):
+            tourist_destinations.extend(db.session.query(ModelTouristDestination).\
+            filter(ModelTouristDestination.is_forest == True).all()[:3])
+        if(maxi==mountain):
+            tourist_destinations.extend(db.session.query(ModelTouristDestination).\
+            filter(ModelTouristDestination.is_mountain == True).all()[:3])
+        return tourist_destinations
+    else:
+        today = date.today()
+        season = await get_tourist_destinations_of_season(today.month)
+
+        return season
