@@ -32,6 +32,19 @@ def get_profile(profile_id=Depends(auth_wrapper)):
     return profile
 
 
+def select_profile_by_user_id(user_id):
+    """
+    Función para obtener el perfil de un usuario apartir del identificador.
+    :param user_id: identificador de un usuario.
+    :return db_profile: DAO de un perfil de usuario.
+    :raise: HTTPException: no se encontro el perfil.
+    """
+    db_profile = db.session.query(ModelProfile).filter(ModelProfile.user_id == user_id).one()
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return db_profile
+
+
 def select_profile(profile_id: int):
     db_profile = db.session.query(ModelProfile).get(profile_id)
 

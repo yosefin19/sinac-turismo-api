@@ -401,6 +401,7 @@ def get_tourist_destination_by_conservation_area_id(conservation_area_id: int):
         filter(ModelTouristDestination.conservation_area_id == conservation_area_id).all()
     return tourist_destinations
 
+
 @tourist_destination_router.get("/tourist-destination/season/{current_month}")
 async def get_tourist_destinations_of_season(current_month: int):
     """

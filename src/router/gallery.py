@@ -73,20 +73,25 @@ async def add_gallery_photo(photos: List[UploadFile] = File(...), gallery_id = D
     db_g = select_gallery(gallery_id)
 
     PATH = f'/data_repository/profile/gallery/{gallery_id}/'
-    photos_path = db_g.photos_path
-
+    if(db_g.photos_path=="/"):
+        photos_path = ""
+    else:
+        photos_path = db_g.photos_path
+    
     path = ''
     for photo in photos:
         path = await add_new_image(PATH, photo)
-        if photos_path:
+        if(photos_path==""):
+            photos_path += path
+        else:
             photos_path += ","+path
-
+    
     db_g.photos_path = photos_path
     db.session.commit()
     db.session.refresh(db_g)
     return photos_path
 
-@gallery.delete("/delete-photo", status_code=status.HTTP_200_OK)
+@gallery.delete("/delete-photo/{name}", status_code=status.HTTP_200_OK)
 async def delete_gallery_photo(name: str, gallery_id = Depends(auth_wrapper)):
 
     PATH = f'/data_repository/profile/gallery/{gallery_id}'
@@ -96,18 +101,17 @@ async def delete_gallery_photo(name: str, gallery_id = Depends(auth_wrapper)):
             if(file == name):
                 await remove_image(PATH + "/" + file)
 
-    gallery = select_gallery(gallery_id)
-    print(gallery.photos_path)
+    gallery = select_gallery(gallery_id) 
     photos_path = gallery.photos_path.split(',')
-    print(photos_path)
-    new_photos_path = list()
+    new_photos_path = ""
     for photo in photos_path: 
         filename = photo.split('/')[-1]
-        print(filename)
         if not(filename==name):
-            print('dentro')
-            new_photos_path.append(photo)
-
+            if(new_photos_path==""):
+                new_photos_path+=photo
+            else:
+                new_photos_path+=','+photo
+    
     gallery.photos_path = new_photos_path
     db.session.commit()
     db.session.refresh(gallery)
