@@ -170,6 +170,17 @@ async def delete_photo(type, profile_id=Depends(auth_wrapper)):
     raise HTTPException(status_code=404, detail="File not found")
 
 
+@profile.get("/users/{user_id}/profiles/", response_model=SchemaProfile, status_code=status.HTTP_200_OK)
+def get_profile_by_user(user_id: int):
+
+    favorite_areas = db.session.query(ModelProfile).filter(
+        ModelProfile.user_id == user_id).all()
+    if len(favorite_areas) != 0:
+        return favorite_areas[0]
+    
+    raise HTTPException(status_code=404, detail="Profile not found")
+
+
 @profile.get("/users/all/auth-profiles/", response_model=SchemaProfile, status_code=status.HTTP_200_OK)
 def get_authenticated_profile(user_id=Depends(auth_wrapper)):
     profiles = db.session.query(ModelProfile).filter(
