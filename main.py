@@ -20,21 +20,19 @@ Copyright (C) 2021 Brandon Ledezma, Walter Morales, Yosefin Solano
 ========================================================================
 """
 
-
 import os
 import uvicorn
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-
 from fastapi.staticfiles import StaticFiles
 from fastapi_sqlalchemy import DBSessionMiddleware
-
 
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.router.review import review_router
 from src.router.tourist_destination import tourist_destination_router
 from src.router.conservation_area import conservation_area_router
 from src.user import user
@@ -63,16 +61,21 @@ sinac_turismo_api.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Ruta predefinida
 @sinac_turismo_api.get("/")
 async def root():
     return {'message': "SINAC Turismo API"}
+
 
 # Se incluyen las rutas de las áreas de conservación
 sinac_turismo_api.include_router(conservation_area_router)
 
 # Se incluyen las rutas de los destinos turisticos
 sinac_turismo_api.include_router(tourist_destination_router)
+
+# Se incluyen las rutas de las opiniones
+sinac_turismo_api.include_router(review_router)
 
 # Se incluyen las rutas de los usuarios
 sinac_turismo_api.include_router(user)
@@ -82,6 +85,7 @@ sinac_turismo_api.include_router(profile)
 
 # Se incluyen las rutas de la galerua
 sinac_turismo_api.include_router(gallery)
+
 
 if __name__ == "__main__":
     uvicorn.run(sinac_turismo_api, host="0.0.0.0", port=8000, reload=True)

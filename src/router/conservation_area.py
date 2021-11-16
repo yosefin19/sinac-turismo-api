@@ -1,18 +1,15 @@
 from typing import List
 
 from fastapi import APIRouter, HTTPException
-from fastapi_sqlalchemy import db
 from fastapi import File, UploadFile, status, Depends
-
-from src.models import ConservationArea as ModelConservationArea
-from src.schema import ConservationArea as SchemaConservationArea
-
-from src.models import FavoriteArea as ModelFavoriteArea
-from src.schema import FavoriteArea as SchemaFavoriteArea
+from fastapi_sqlalchemy import db
 
 from src import repository
-
 from src.authentication import auth_wrapper
+from src.models import ConservationArea as ModelConservationArea
+from src.models import FavoriteArea as ModelFavoriteArea
+from src.schema import ConservationArea as SchemaConservationArea
+from src.schema import FavoriteArea as SchemaFavoriteArea
 
 conservation_area_router = APIRouter()
 
@@ -173,14 +170,12 @@ def select_favorite_area(favorite_area_id: int):
 
 
 @conservation_area_router.get('/conservation-area/all/favorite')
-# def get_favorite_areas(user_id=Depends(auth_wrapper)):
-def get_favorite_areas():
+def get_favorite_areas(user_id=Depends(auth_wrapper)):
     """
     Función para buscar las áreas favoritas de un usuario.
     :param user_id: Identificador del usuario.
     :return db_favorites_area: Lista de áreas.
     """
-    user_id = 1
     favorite_areas = []
     for favorite_area in db.session.query(ModelFavoriteArea).filter(ModelFavoriteArea.user_id == user_id).all():
         favorite_areas.append(favorite_area)
@@ -244,14 +239,3 @@ def delete_favorite_area(favorite_area_id: int, user_id=Depends(auth_wrapper)):
     db.session.delete(db_favorite_area)
     db.session.commit()
     return True
-
-
-@profile.get("/users/all/auth-profiles/", response_model=SchemaProfile, status_code=status.HTTP_200_OK)
-def get_authenticated_profile(user_id=Depends(auth_wrapper)):
-
-    profiles = db.session.query(ModelProfile).filter(
-        ModelProfile.user_id == user_id).all()
-    if len(profiles) != 0:
-        return profiles[0]
-
-    raise HTTPException(status_code=404, detail="Profile not found")
