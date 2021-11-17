@@ -206,3 +206,51 @@ async def delete_tourist_destination_photo(tourist_destination_id):
             await remove_image(PATH + file)
         remove_directory(PATH)
 
+
+async def add_review_photo(directory_name, photo):
+    """
+    Función para registrar las fotografías de una opinión para un destino turístico
+    :param directory_name: Nombre del directorio en el que se almacenará las fotografía.
+    :param photo: Datos correspondientes a una imagen.
+    :return photos_path: Rutas de las fotografía.
+    """
+
+    PATH = f'/data_repository/tourist_destination_review/{directory_name}/'
+    photo_path = await add_new_image(PATH, photo)
+    return photo_path
+
+
+async def update_review_photo(photo_path, directory_name, photo):
+    """
+    Función para actualizar las fotografías de una opinión de un destino turístico del sistema de archivos.
+    :param photos_path: Ruta del archivo previamente agregado.
+    :param directory_name: Directorio en el cual se almacenan los archivos en el sistema de archivos.
+    :param photos: Datos correspondientes a una imagen.
+    :return new_photos_path: String con las ruta actualizada.
+    """
+
+    PATH = f'/data_repository/tourist_destination_review/{directory_name}/'
+    photo_file_name = photo_path.split('/')[-1]
+
+    if not (photo.filename in photo_file_name):
+        new_path = await add_new_image(PATH, photo)
+    else:
+        await remove_image(PATH + photo_file_name)
+        new_path = await add_new_image(PATH, photo)
+
+    return new_path
+
+
+async def delete_review_photo(tourist_destination_id, user_id):
+    """
+    Función para eliminar el directorio de un destino turístico del sistema de archivos.
+    :param tourist_destination_id: identificador del destino turístico
+    """
+
+    directory_name = f'{tourist_destination_id}-{user_id}_dir'
+    PATH = f'/data_repository/tourist_destination_review/{directory_name}/'
+    if os.path.isdir(os.getcwd() + PATH):
+        directory_files = os.listdir(os.getcwd() + PATH)
+        for file in directory_files:
+            await remove_image(PATH + file)
+        remove_directory(PATH)
