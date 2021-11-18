@@ -228,14 +228,14 @@ async def recommendation(user_id=Depends(auth_wrapper)):
     favorite = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
         filter(FavoriteDestination.user_id == user_id).all()
     if(favorite):
-        beach = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
-        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_beach == True).all()
-        volcano = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
-        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_volcano == True).all()
-        forest = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
-        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_forest == True).all()
-        mountain = db.session.query(ModelTouristDestination).join(FavoriteDestination). \
-        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_mountain == True).all()
+        beach = len(db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_beach == True).all())
+        volcano = len(db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_volcano == True).all())
+        forest = len(db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_forest == True).all())
+        mountain = len(db.session.query(ModelTouristDestination).join(FavoriteDestination). \
+        filter(FavoriteDestination.user_id == user_id, ModelTouristDestination.is_mountain == True).all())
         maxi = max(beach, volcano, forest, mountain)
 
         tourist_destinations = []
