@@ -13,6 +13,10 @@ Base = declarative_base()
 
 
 class User(Base):
+    """
+        Clase que hereda de Base y hace referencía a un DAO de la información
+        de los usuarios del sistema.
+    """
     __tablename__ = "user"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True)
@@ -21,6 +25,10 @@ class User(Base):
 
 
 class Profile(Base):
+    """
+        Clase que hereda de Base y hace referencía a un DAO de la información
+        de los perfiles de los usuarios.
+    """
     __tablename__ = "profile"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
@@ -148,6 +156,10 @@ class Review(Base):
 
     
 class Gallery(Base):
+    """
+        Clase que hereda de Base y hace referencía a un DAO de la información
+        de las galerias de los usuarios.
+    """
     __tablename__ = "gallery"
     id = Column(Integer, primary_key=True, index=True)
     photos_path = Column(String)

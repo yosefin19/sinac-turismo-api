@@ -6,6 +6,7 @@ from fastapi_sqlalchemy import db
 
 from src import repository
 from src.authentication import auth_wrapper
+from src.router.user import select_user
 from src.models import ConservationArea as ModelConservationArea
 from src.models import FavoriteArea as ModelFavoriteArea
 from src.schema import ConservationArea as SchemaConservationArea
@@ -18,8 +19,8 @@ def select_conservation_area(conservation_area_id: int):
     """
     Función para buscar un área de conservación en la base de datos mediante un identificador.
     :param conservation_area_id: identificador de un área de conservación.
-    :return db_conservation_area: DAO de un área de conservación.
-    :raise: HTTPException: no se encontro el identificador.
+    :return: db_conservation_area DAO de un área de conservación.
+    :raise HTTPException: no se encontro el identificador.
     """
     db_conservation_area = db.session.query(
         ModelConservationArea).get(conservation_area_id)
@@ -30,12 +31,17 @@ def select_conservation_area(conservation_area_id: int):
 
 @conservation_area_router.post("/conservation-area", response_model=SchemaConservationArea,
                                status_code=status.HTTP_201_CREATED)
-def add_conservation_area(conservation_area: SchemaConservationArea):
+def add_conservation_area(conservation_area: SchemaConservationArea, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para agregar información de una nueva área de conservación.
     :param conservation_area: DTO de un área de conservación con los datos que se van a registrar.
+    :param user_id: identificador de un usuario administrador encargado de registrar un área.
     :return: DAO de un área de conservación con los datos actualizados.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_conservation_area = ModelConservationArea(name=conservation_area.name,
                                                  description=conservation_area.description,
                                                  photos_path=conservation_area.photos_path,
@@ -48,15 +54,20 @@ def add_conservation_area(conservation_area: SchemaConservationArea):
 
 @conservation_area_router.post('/conservation-area/{conservation_area_id}/photos',
                                status_code=status.HTTP_201_CREATED)
-async def add_conservation_area_photos(conservation_area_id: int,
-                                       photos: List[UploadFile] = File(...), region_photo: UploadFile = File(...)):
+async def add_conservation_area_photos(conservation_area_id: int, photos: List[UploadFile] = File(...),
+                                       region_photo: UploadFile = File(...), user_id=Depends(auth_wrapper)):
     """
     Ruta para agregar fotografías de un área de conservación.
     :param conservation_area_id: identificador de un área de conservación.
     :param photos: Lista de datos correspondientes a una imagen.
     :param region_photo: Datos correspondientes a una imagen.
-    :return db_conservation_area:  DAO de un área de conservación con los datos actualizados.
+    :param user_id: identificador de un usuario administrador encargado de registrar un área.
+    :return: db_conservation_area DAO de un área de conservación con los datos actualizados.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_conservation_area = select_conservation_area(conservation_area_id)
 
     new_directory_name = f'{db_conservation_area.id}_dir'
@@ -73,7 +84,7 @@ async def add_conservation_area_photos(conservation_area_id: int,
 def get_conservation_area():
     """
     Ruta para obtener todas las áreas de conservación registradas.
-    :return conservation_areas: Lista de DAO de áreas de conservación.
+    :return: conservation_areas Lista de DAO de áreas de conservación.
     """
     conservation_areas = db.session.query(ModelConservationArea).all()
     return conservation_areas
@@ -85,7 +96,7 @@ def get_conservation_area(conservation_area_id: int):
     """
     Ruta para obtener un áreas de conservación en con un ID especifico.
     :param conservation_area_id: identificador del áreas de conservación
-    :return:
+    :return: DAO con la información de un área de conservación.
     """
     conservation_area = db.session.query(
         ModelConservationArea).get(conservation_area_id)
@@ -96,13 +107,19 @@ def get_conservation_area(conservation_area_id: int):
 
 @conservation_area_router.post("/conservation-area/update/{conservation_area_id}",
                                response_model=SchemaConservationArea, status_code=status.HTTP_200_OK)
-def update_conservation_area(conservation_area_id: int, conservation_area: SchemaConservationArea):
+def update_conservation_area(conservation_area_id: int, conservation_area: SchemaConservationArea,
+                             user_id=Depends(auth_wrapper)):
     """
     Ruta para actualizar los datos asociadas a un área de conservación.
     :param conservation_area_id: identificador del área de conservación a actualizar.
     :param conservation_area: DTO con los datos.
-    :return db_conservation_area: DAO con los datos actualizados.
+    :param user_id: identificador de un usuario administrador encargado de registrar un área.
+    :return: db_conservation_area: DAO con los datos actualizados.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_conservation_area = select_conservation_area(conservation_area_id)
 
     db_conservation_area.name = conservation_area.name
@@ -117,15 +134,20 @@ def update_conservation_area(conservation_area_id: int, conservation_area: Schem
 
 @conservation_area_router.post("/conservation-area/update/{conservation_area_id}/photos",
                                response_model=SchemaConservationArea, status_code=status.HTTP_200_OK)
-async def update_conservation_area_photos(conservation_area_id: int,
-                                          photos: List[UploadFile] = File(...), region_photo: UploadFile = File(...)):
+async def update_conservation_area_photos(conservation_area_id: int, photos: List[UploadFile] = File(...),
+                                          region_photo: UploadFile = File(...), user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para actualizar las fotografías de un área de conservación.
     :param conservation_area_id: identificador del área de conservación a actualizar.
     :param photos: Lista de datos correspondientes a una imagen.
     :param region_photo: Datos correspondientes a una imagen.
-    :return db_conservation_area:  DAO de un área de conservación con los datos actualizados.
+    :param user_id: identificador de un usuario administrador encargado de registrar un área.
+    :return: db_conservation_area  DAO de un área de conservación con los datos actualizados.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_conservation_area = select_conservation_area(conservation_area_id)
 
     directory_name = f'{db_conservation_area.id}_dir'
@@ -140,12 +162,17 @@ async def update_conservation_area_photos(conservation_area_id: int,
 
 
 @conservation_area_router.delete("/conservation-area/{conservation_area_id}", status_code=status.HTTP_200_OK)
-async def delete_conservation_area(conservation_area_id: int):
+async def delete_conservation_area(conservation_area_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para eliminar un área de conservacíon con los datos asociados.
     :param conservation_area_id: identificador del área de conservación.
-    :return booolean: Verdadero si fue correctamente eliminado.
+    :param user_id: identificador de un usuario administrador encargado de registrar un área.
+    :return: boolean Verdadero si fue correctamente eliminado.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_conservation_area = select_conservation_area(conservation_area_id)
 
     await repository.delete_conservation_area_photo(db_conservation_area.id)
@@ -174,7 +201,7 @@ def get_favorite_areas(user_id=Depends(auth_wrapper)):
     """
     Función para buscar las áreas favoritas de un usuario.
     :param user_id: Identificador del usuario.
-    :return db_favorites_area: Lista de áreas.
+    :return: db_favorites_area Lista de áreas.
     """
     favorite_areas = []
     for favorite_area in db.session.query(ModelFavoriteArea).filter(ModelFavoriteArea.user_id == user_id).all():
@@ -200,16 +227,17 @@ def get_favorite_area_id(conservation_area_id: int, user_id=Depends(auth_wrapper
     Función para identificar si un área está marcado como favorita.
     :param conservation_area_id: Identificador del área de conservación.
     :param user_id: Identificador del usuario.
-    :return El identificador de la relación o cero.
+    :return: El identificador de la relación o cero.
     """
     for favorite_area in db.session.query(ModelFavoriteArea).filter(ModelFavoriteArea.user_id == user_id).all():
-        if (favorite_area.conservation_area_id == conservation_area_id):
+        if favorite_area.conservation_area_id == conservation_area_id:
             return favorite_area.id
 
     return 0
 
 
-@conservation_area_router.post('/conservation-area/{conservation_area_id}/favorite', response_model=SchemaFavoriteArea, status_code=status.HTTP_201_CREATED)
+@conservation_area_router.post('/conservation-area/{conservation_area_id}/favorite',
+                               response_model=SchemaFavoriteArea, status_code=status.HTTP_201_CREATED)
 def add_favorite_area(conservation_area_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para agregar información de una nueva área favorita.
@@ -229,11 +257,12 @@ def add_favorite_area(conservation_area_id: int, user_id=Depends(auth_wrapper)):
 def delete_favorite_area(favorite_area_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para eliminar una área favorita.
-    :param user_id: Identificador del usuario.
-    :return boolean: Verdadero si fue correctamente eliminado.
+    :param favorite_area_id: identificador de la área.
+    :param user_id: credenciales del usuario para obtener su información
+    :return: boolean Verdadero si fue correctamente eliminado.
     """
     db_favorite_area = select_favorite_area(favorite_area_id)
-    if(db_favorite_area.user_id != user_id):
+    if db_favorite_area.user_id != user_id:
         return False
 
     db.session.delete(db_favorite_area)

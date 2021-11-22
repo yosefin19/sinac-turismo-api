@@ -1,43 +1,18 @@
 import os
 import secrets
 from typing import List
-from PIL import Image
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi_sqlalchemy import db
 from fastapi import status, File, UploadFile
 from src.authentication import auth_wrapper
 from src.models import Gallery as ModelGallery
 from src.schema import Gallery as SchemaGallery
+from src.repository import reduce_image_size, remove_image
 
 gallery = APIRouter()
 
-# Extenciones validas para las imagenes disponibles a cargar
-EXTENSIONS = ["png", "jpg", "jpeg"]
-
-
-async def reduce_image_size(image_path):
-
-    image_path = os.getcwd() + image_path
-    image = Image.open(image_path)
-    image.save(image_path, optimize=True, quality=70)
-
-async def remove_image(path):
-    path = os.getcwd() + path
-    if os.path.exists(path):
-        os.remove(path)
-    else:
-        raise HTTPException(status_code=404, detail="File not found")
-
-def remove_directory(path):
-
-    path = os.getcwd() + path
-    if os.path.isdir(path):
-        os.rmdir(path)
-    else:
-        raise HTTPException(status_code=404, detail="File not found")
 
 async def add_new_image(path, image):
-
     image_name = image.filename
     image_extension = image_name.split(".")[-1]
 
@@ -53,70 +28,73 @@ async def add_new_image(path, image):
     file.close()
     return generated_name
 
-@gallery.get("/gallery",response_model=SchemaGallery, status_code=status.HTTP_200_OK)
-def get_gallery(gallery_id = Depends(auth_wrapper)):
-    gallery = select_gallery(gallery_id)
-    return gallery
+
+@gallery.get("/gallery", response_model=SchemaGallery, status_code=status.HTTP_200_OK)
+def get_gallery(gallery_id=Depends(auth_wrapper)):
+    db_gallery = select_gallery(gallery_id)
+    return db_gallery
+
 
 @gallery.post("/add-gallery", response_model=SchemaGallery, status_code=status.HTTP_201_CREATED)
-def add_gallery(gallery: SchemaGallery):
+def add_gallery(gallery_schema: SchemaGallery):
+    db_gallery = ModelGallery(photos_path='/', profile_id=gallery_schema.profile_id)
 
-    db_g = ModelGallery(photos_path = '/',  profile_id = gallery.profile_id)
-
-    db.session.add(db_g)
+    db.session.add(db_gallery)
     db.session.commit()
-    
-    return db_g
+
+    return db_gallery
+
 
 @gallery.post("/add-photo", status_code=status.HTTP_200_OK)
-async def add_gallery_photo(photos: List[UploadFile] = File(...), gallery_id = Depends(auth_wrapper) ):
-    db_g = select_gallery(gallery_id)
+async def add_gallery_photo(photos: List[UploadFile] = File(...), gallery_id=Depends(auth_wrapper)):
+    db_gallery = select_gallery(gallery_id)
 
     PATH = f'/data_repository/profile/gallery/{gallery_id}/'
-    if(db_g.photos_path=="/"):
+    if db_gallery.photos_path == "/":
         photos_path = ""
     else:
-        photos_path = db_g.photos_path
-    
+        photos_path = db_gallery.photos_path
+
     path = ''
     for photo in photos:
         path = await add_new_image(PATH, photo)
-        if(photos_path==""):
+        if photos_path == "":
             photos_path += path
         else:
-            photos_path += ","+path
-    
-    db_g.photos_path = photos_path
+            photos_path += "," + path
+
+    db_gallery.photos_path = photos_path
     db.session.commit()
-    db.session.refresh(db_g)
+    db.session.refresh(db_gallery)
     return photos_path
 
-@gallery.delete("/delete-photo/{name}", status_code=status.HTTP_200_OK)
-async def delete_gallery_photo(name: str, gallery_id = Depends(auth_wrapper)):
 
+@gallery.delete("/delete-photo/{name}", status_code=status.HTTP_200_OK)
+async def delete_gallery_photo(name: str, gallery_id=Depends(auth_wrapper)):
     PATH = f'/data_repository/profile/gallery/{gallery_id}'
     if os.path.isdir(os.getcwd() + PATH):
         directory_files = os.listdir(os.getcwd() + PATH)
         for file in directory_files:
-            if(file == name):
+            if file == name:
                 await remove_image(PATH + "/" + file)
 
-    gallery = select_gallery(gallery_id) 
-    photos_path = gallery.photos_path.split(',')
+    db_gallery = select_gallery(gallery_id)
+    photos_path = db_gallery.photos_path.split(',')
     new_photos_path = ""
-    for photo in photos_path: 
+    for photo in photos_path:
         filename = photo.split('/')[-1]
-        if not(filename==name):
-            if(new_photos_path==""):
-                new_photos_path+=photo
+        if not (filename == name):
+            if new_photos_path == "":
+                new_photos_path += photo
             else:
-                new_photos_path+=','+photo
-    
+                new_photos_path += ',' + photo
+
     gallery.photos_path = new_photos_path
     db.session.commit()
-    db.session.refresh(gallery)
+    db.session.refresh(db_gallery)
 
     return new_photos_path
+
 
 def select_gallery(gallery_id: int):
     db_g = db.session.query(ModelGallery).filter(ModelGallery.profile_id == gallery_id).one()

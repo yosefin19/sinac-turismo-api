@@ -1,5 +1,4 @@
 from src import repository
-from typing import List
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
@@ -33,6 +32,7 @@ def select_review(review_id: int):
     db_review.date = formatDate(db_review.date)
     return db_review
 
+
 def select_review_by_user(tourist_destination_id: int, user_id: int):
     """
     Función para buscar la información de la opinión de un usuario a partir de su identificador.
@@ -42,12 +42,14 @@ def select_review_by_user(tourist_destination_id: int, user_id: int):
     """
     for review in db.session.query(ModelReview).filter(ModelReview.user_id == user_id).all():
         if (review.tourist_destination_id == tourist_destination_id):
-            review.date = datetime.now()#formatDate(review.date)
+            review.date = datetime.now()  # formatDate(review.date)
             return review
 
     raise HTTPException(status_code=404, detail="Item not found")
 
-@review_router.get('/tourist-destination/{tourist_destination_id}/user-review', response_model=SchemaReview, status_code=status.HTTP_200_OK)
+
+@review_router.get('/tourist-destination/{tourist_destination_id}/user-review', response_model=SchemaReview,
+                   status_code=status.HTTP_200_OK)
 def get_user_review(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
     """
     Función para buscar la opinión de un usuario en un destino.
@@ -75,7 +77,8 @@ def get_reviews(tourist_destination_id: int):
     return reviews
 
 
-@review_router.post('/tourist-destination/{tourist_destination_id}/user-review', response_model=SchemaReview, status_code=status.HTTP_201_CREATED)
+@review_router.post('/tourist-destination/{tourist_destination_id}/user-review', response_model=SchemaReview,
+                    status_code=status.HTTP_201_CREATED)
 def add_review(tourist_destination_id: int, review: SchemaReview, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para agregar información de una nueva opinión.
@@ -88,7 +91,7 @@ def add_review(tourist_destination_id: int, review: SchemaReview, user_id=Depend
                             text=review.text,
                             date=datetime.now(),
                             calification=review.calification,
-                            image_path=review.image_path,#photos_path,
+                            image_path=review.image_path,  # photos_path,
                             user_id=user_id,
                             tourist_destination_id=tourist_destination_id)
 
@@ -114,21 +117,22 @@ async def add_review_image(tourist_destination_id: int, image: UploadFile = File
 
 @review_router.patch("/tourist-destination/{tourist_destination_id}/update-review",
                      response_model=SchemaReview, status_code=status.HTTP_200_OK)
-def update_review(tourist_destination_id: int, review: SchemaReview, user_id=Depends(auth_wrapper)):
+def update_review(review_id: int, review: SchemaReview, user_id=Depends(auth_wrapper)):
     """
     Ruta para actualizar los datos de una opinión.
     :param review_id: identificador de la opinión.
     :param review: DTO con los nuevos datos.
+    :param user_id: identificador del usuario.
     :return db_review: DAO con los datos actualizados.
     """
-    db_review = select_review_by_user(tourist_destination_id, user_id)
+    db_review = select_review_by_user(review_id, user_id)
 
     update_data = review.dict(exclude_unset=True)
 
     # if usuario
     # update photos
 
-    #for key, value in update_data.items():
+    # for key, value in update_data.items():
     #    setattr(db_review, key, value)
 
     db_review.title = update_data.get("title")
@@ -144,15 +148,17 @@ def update_review(tourist_destination_id: int, review: SchemaReview, user_id=Dep
     return db_review
 
 
-@review_router.delete('/tourist-destination/{tourist_destination_id}/user-review/{review_id}', status_code=status.HTTP_200_OK)
+@review_router.delete('/tourist-destination/{tourist_destination_id}/user-review/{review_id}',
+                      status_code=status.HTTP_200_OK)
 def delete_review(review_id: int, user_id=Depends(auth_wrapper)):
     """
-    Ruta utilizada para eliminar un destino favorita.
+    Ruta utilizada para eliminar una opinión de un destino.
+    :param review_id: identificador de la opinion.
     :param user_id: Identificador del usuario.
     :return boolean: Verdadero si fue correctamente eliminado.
     """
     db_review = select_review(review_id)
-    if(db_review.user_id != user_id):
+    if db_review.user_id != user_id:
         return False
 
     # Photos

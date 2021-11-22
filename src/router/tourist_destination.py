@@ -13,6 +13,7 @@ from src.models import VisitedDestination as ModelVisitedDestination
 from src.schema import VisitedDestination as SchemaVisitedDestination
 
 from src import repository
+from src.router.user import select_user
 
 from src.authentication import auth_wrapper
 
@@ -24,7 +25,7 @@ def select_tourist_destination(tourist_destination_id: int):
     Función para buscar un destino turístico en la base de datos mediante un identificador.
     :param tourist_destination_id: identificador de un área de conservación.
     :return db_tourist_destination: DAO de un área de conservación.
-    :raise: HTTPException: no se encontro el identificador.
+    :raise Error: no se encontro el identificador.
     """
     db_tourist_destination = db.session.query(
         ModelTouristDestination).get(tourist_destination_id)
@@ -35,12 +36,17 @@ def select_tourist_destination(tourist_destination_id: int):
 
 @tourist_destination_router.post("/tourist-destination", response_model=SchemaTouristDestination,
                                  status_code=status.HTTP_201_CREATED)
-def add_tourist_destination(tourist_destination: SchemaTouristDestination):
+def add_tourist_destination(tourist_destination: SchemaTouristDestination, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para agregar información de un nuevo destino turístico.
     :param tourist_destination: DTO con los datos a almacenar.
-    :return db_tourist_destination: DAO de un destino turístico con los datos.
+    :param user_id: identificador de un usuario administrador encargado de registrar un destino.
+    :return: db_tourist_destination DAO de un destino turístico con los datos.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_tourist_destination = ModelTouristDestination(name=tourist_destination.name,
                                                      description=tourist_destination.description,
                                                      schedule=tourist_destination.schedule,
@@ -66,13 +72,19 @@ def add_tourist_destination(tourist_destination: SchemaTouristDestination):
 
 @tourist_destination_router.post("/tourist-destination/{tourist_destination_id}/photos",
                                  response_model=SchemaTouristDestination, status_code=status.HTTP_201_CREATED)
-async def add_tourist_destination_photos(tourist_destination_id: int, photos: List[UploadFile] = File(...)):
+async def add_tourist_destination_photos(tourist_destination_id: int, photos: List[UploadFile] = File(...),
+                                         user_id=Depends(auth_wrapper)):
     """
     Ruta para agregar fotografías a un destino turístico.
     :param tourist_destination_id: identificador de un destino turístico.
     :param photos: Lista de datos correspondientes a una imagen.
-    :return db_tourist_destination: DAO con los datos actualizados de las rutas de almacenamiento de las imagenes.
+    :param user_id: identificador de un usuario administrador encargado de registrar fotos de un destino.
+    :return: db_tourist_destination DAO con los datos actualizados de las rutas de almacenamiento de las imagenes.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_tourist_destination = select_tourist_destination(tourist_destination_id)
 
     new_directory_name = f'{db_tourist_destination.id}_dir'
@@ -88,7 +100,7 @@ async def add_tourist_destination_photos(tourist_destination_id: int, photos: Li
 def get_tourist_destination():
     """
     Ruta para obtener todos los destinos turisticos
-    :return tourist_destination: lista con DAO de todos los destinos registrados.
+    :return: tourist_destination lista con DAO de todos los destinos registrados.
     """
     tourist_destination = db.session.query(ModelTouristDestination).all()
     return tourist_destination
@@ -100,22 +112,27 @@ def get_tourist_destination(tourist_destination_id: int):
     """
     Ruta para obtener un destino turístico mediante identificador.
     :param tourist_destination_id: identificador de un destino turístico.
-    :return tourist_destination: DAO del destino turístico registrado.
+    :return: tourist_destination DAO del destino turístico registrado.
     """
     tourist_destination = select_tourist_destination(tourist_destination_id)
     return tourist_destination
 
 
-# conservation-area/{conservation_area_id}
 @tourist_destination_router.post("/tourist-destination/update/{tourist_destination_id}",
                                  response_model=SchemaTouristDestination, status_code=status.HTTP_200_OK)
-def update_tourist_destination(tourist_destination_id: int, tourist_destination: SchemaTouristDestination):
+def update_tourist_destination(tourist_destination_id: int, tourist_destination: SchemaTouristDestination,
+                               user_id=Depends(auth_wrapper)):
     """
     Ruta para actualizar los datos de un destino turístico.
     :param tourist_destination_id: identificador del destino turístico.
     :param tourist_destination: DTO con los nuevos datos.
-    :return db_tourist_destination: DAO con los datos actualizados.
+    :param user_id: identificador de un usuario administrador encargado de actualizar un destino.
+    :return: db_tourist_destination DAO con los datos actualizados.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_tourist_destination = select_tourist_destination(tourist_destination_id)
 
     db_tourist_destination.name = tourist_destination.name
@@ -143,13 +160,19 @@ def update_tourist_destination(tourist_destination_id: int, tourist_destination:
 
 @tourist_destination_router.post("/tourist-destination/update/{tourist_destination_id}/photos",
                                  response_model=SchemaTouristDestination, status_code=status.HTTP_200_OK)
-async def update_tourist_destination_photos(tourist_destination_id: int, photos: List[UploadFile] = File(...)):
+async def update_tourist_destination_photos(tourist_destination_id: int, photos: List[UploadFile] = File(...),
+                                            user_id=Depends(auth_wrapper)):
     """
     Ruta para actualizar las fotografías asociadas a un destino turístico.
     :param tourist_destination_id: identificador del destino turístico.
     :param photos: Lista de datos de imagenes a registrar.
-    :return db_tourist_destination: DAO con las rutas de las fotografías actualizadas.
+    :param user_id: identificador de un usuario administrador encargado de actualizar las fotos de un destino.
+    :return: db_tourist_destination DAO con las rutas de las fotografías actualizadas.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_tourist_destination = select_tourist_destination(tourist_destination_id)
 
     directory_name = f'{db_tourist_destination.id}_dir'
@@ -164,12 +187,17 @@ async def update_tourist_destination_photos(tourist_destination_id: int, photos:
 
 @tourist_destination_router.delete("/tourist-destination/{tourist_destination_id}",
                                    status_code=status.HTTP_200_OK)
-async def delete_tourist_destination(tourist_destination_id: int):
+async def delete_tourist_destination(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para eliminar todos los datos asociados a un destino turístico.
     :param tourist_destination_id: identificador del destino turístico a eliminar.
-    :return boolean: Verdadedo si se completa correctamente.
+    :param user_id: identificador de un usuario administrador encargado de eliminar un destino.
+    :return: boolean Verdadedo si se completa correctamente.
     """
+    db_user = select_user(user_id)
+    if not db_user.admin:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
     db_tourist_destination = select_tourist_destination(tourist_destination_id)
 
     await repository.delete_tourist_destination_photo(db_tourist_destination.id)
@@ -183,7 +211,7 @@ def select_favorite_destination(favorite_destination_id: int):
     """
     Función para buscar la información de un destino marcado como favorito para un usuario.
     :param favorite_destination_id: Identificador de la relación.
-    :return db_favorite_destination: Información del destino marcada como favorito.
+    :return: db_favorite_destination Información del destino marcada como favorito.
     """
     db_favorite_destination = db.session.query(
         ModelFavoriteDestination).get(favorite_destination_id)
@@ -197,14 +225,16 @@ def get_favorite_destinations(user_id=Depends(auth_wrapper)):
     """
     Función para buscar los destinos favoritos de un usuario.
     :param user_id: Identificador del usuario.
-    :return tourist_destinations: Lista de destinos favoritos.
+    :return: tourist_destinations Lista de destinos favoritos.
     """
     favorite_destinations = []
-    for favorite_destination in db.session.query(ModelFavoriteDestination).filter(ModelFavoriteDestination.user_id == user_id).all():
+    for favorite_destination in db.session.query(ModelFavoriteDestination). \
+            filter(ModelFavoriteDestination.user_id == user_id).all():
         favorite_destinations.append(favorite_destination)
 
     def getIds(item):
         return [item.tourist_destination_id, item.id]
+
     favorite_destinations_id = list(map(getIds, favorite_destinations))
 
     tourist_destinations = []
@@ -223,16 +253,18 @@ def get_favorite_destination_id(tourist_destination_id: int, user_id=Depends(aut
     Función para identificar si un destino está marcado como favorito.
     :param tourist_destination_id: Identificador del destino turístico.
     :param user_id: Identificador del usuario.
-    :return El identificador de la relación o cero.
+    :return: El identificador de la relación o cero.
     """
-    for favorite_destination in db.session.query(ModelFavoriteDestination).filter(ModelFavoriteDestination.user_id == user_id).all():
-        if (favorite_destination.tourist_destination_id == tourist_destination_id):
+    for favorite_destination in db.session.query(ModelFavoriteDestination). \
+            filter(ModelFavoriteDestination.user_id == user_id).all():
+        if favorite_destination.tourist_destination_id == tourist_destination_id:
             return favorite_destination.id
 
     return 0
 
 
-@tourist_destination_router.post('/tourist-destination/{tourist_destination_id}/favorite', response_model=SchemaFavoriteDestination, status_code=status.HTTP_201_CREATED)
+@tourist_destination_router.post('/tourist-destination/{tourist_destination_id}/favorite',
+                                 response_model=SchemaFavoriteDestination, status_code=status.HTTP_201_CREATED)
 def add_favorite_destination(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para agregar información de un nuevo destino favorito.
@@ -248,16 +280,18 @@ def add_favorite_destination(tourist_destination_id: int, user_id=Depends(auth_w
     return db_favorite_destination
 
 
-@tourist_destination_router.delete('/tourist-destination/all/favorite/{favorite_destination_id}', status_code=status.HTTP_200_OK)
+@tourist_destination_router.delete('/tourist-destination/all/favorite/{favorite_destination_id}',
+                                   status_code=status.HTTP_200_OK)
 def delete_favorite_destination(favorite_destination_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para eliminar un destino favorita.
+    :param favorite_destination_id: identificador del destino.
     :param user_id: Identificador del usuario.
-    :return boolean: Verdadero si fue correctamente eliminado.
+    :return: boolean Verdadero si fue correctamente eliminado.
     """
     db_favorite_destination = select_favorite_destination(
         favorite_destination_id)
-    if(db_favorite_destination.user_id != user_id):
+    if db_favorite_destination.user_id != user_id:
         return False
 
     db.session.delete(db_favorite_destination)
@@ -269,7 +303,7 @@ def select_visited_destination(visited_destination_id: int):
     """
     Función para buscar la información de un destino marcado como visitado para un usuario.
     :param visited_destination_id: Identificador de la relación.
-    :return db_visited_destination: Información del destino marcada como visitado.
+    :return: db_visited_destination Información del destino marcada como visitado.
     """
     db_visited_destination = db.session.query(
         ModelVisitedDestination).get(visited_destination_id)
@@ -283,14 +317,16 @@ def get_visited_destinations(user_id=Depends(auth_wrapper)):
     """
     Función para buscar los destinos visitados por un usuario.
     :param user_id: Identificador del usuario.
-    :return tourist_destinations: Lista de destinos visitados.
+    :return: tourist_destinations Lista de destinos visitados.
     """
     visited_destinations = []
-    for visited_destination in db.session.query(ModelVisitedDestination).filter(ModelVisitedDestination.user_id == user_id).all():
+    for visited_destination in db.session.query(ModelVisitedDestination). \
+            filter(ModelVisitedDestination.user_id == user_id).all():
         visited_destinations.append(visited_destination)
 
     def getIds(item):
         return [item.tourist_destination_id, item.id]
+
     visited_destinations_id = list(map(getIds, visited_destinations))
 
     tourist_destinations = []
@@ -309,16 +345,18 @@ def get_visited_destination_id(tourist_destination_id: int, user_id=Depends(auth
     Función para identificar si un destino está marcado como visitado.
     :param tourist_destination_id: Identificador del destino turístico.
     :param user_id: Identificador del usuario.
-    :return El identificador de la relación o cero.
+    :return: El identificador de la relación o cero.
     """
-    for favorite_destination in db.session.query(ModelVisitedDestination).filter(ModelVisitedDestination.user_id == user_id).all():
-        if (favorite_destination.tourist_destination_id == tourist_destination_id):
+    for favorite_destination in db.session.query(ModelVisitedDestination).filter(
+            ModelVisitedDestination.user_id == user_id).all():
+        if favorite_destination.tourist_destination_id == tourist_destination_id:
             return favorite_destination.id
 
     return 0
 
 
-@tourist_destination_router.post('/tourist-destination/{tourist_destination_id}/visited', response_model=SchemaVisitedDestination, status_code=status.HTTP_201_CREATED)
+@tourist_destination_router.post('/tourist-destination/{tourist_destination_id}/visited',
+                                 response_model=SchemaVisitedDestination, status_code=status.HTTP_201_CREATED)
 def add_visited_destination(tourist_destination_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para agregar información de un nuevo destino favorito.
@@ -334,31 +372,34 @@ def add_visited_destination(tourist_destination_id: int, user_id=Depends(auth_wr
     return db_visited_destination
 
 
-@tourist_destination_router.delete('/tourist-destination/all/visited/{visited_destination_id}', status_code=status.HTTP_200_OK)
+@tourist_destination_router.delete('/tourist-destination/all/visited/{visited_destination_id}',
+                                   status_code=status.HTTP_200_OK)
 def delete_visited_destination(visited_destination_id: int, user_id=Depends(auth_wrapper)):
     """
     Ruta utilizada para eliminar un destino favorita.
+    :param visited_destination_id: identificador del destino favorito.
     :param user_id: Identificador del usuario.
-    :return boolean: Verdadero si fue correctamente eliminado.
+    :return: boolean Verdadero si fue correctamente eliminado.
     """
     db_visited_destination = select_visited_destination(
         visited_destination_id)
-    if(db_visited_destination.user_id != user_id):
+    if db_visited_destination.user_id != user_id:
         return False
 
     db.session.delete(db_visited_destination)
     db.session.commit()
     return True
 
+
 @tourist_destination_router.get("/tourist-destination/conservation-area/{conservation_area_id}")
 def get_tourist_destination_by_conservation_area_id(conservation_area_id: int):
     """
     Ruta que resuelve todos los destinos turísticos que pertenecen a
     una misma área de conservación.
-    param: conservation_area_id: identificador del área de conservación a obtener los destinos.
-    return: arreglo con los destinos asociados al área.
+    :param conservation_area_id: identificador del área de conservación a obtener los destinos.
+    :return: arreglo con los destinos asociados al área.
     """
-    tourist_destinations = db.session.query(ModelTouristDestination).\
+    tourist_destinations = db.session.query(ModelTouristDestination). \
         filter(ModelTouristDestination.conservation_area_id == conservation_area_id).all()
     return tourist_destinations
 
@@ -369,9 +410,9 @@ async def get_tourist_destinations_of_season(current_month: int):
     Ruta utilizada para obtener los destinos que se encuentren en temporada en un
     mes en especifico del año, los destinos tienen un mes de inicio y finalización
     de temporada, por lo que se valida si inicia y finaliza un mismo año o no.
-    param: current_month: número del mes actual del año
-    return: arreglo con los destinos que se encuentren en temporada
-    raise: error HTTP 400 si el número de mes actual es mayor a 12.
+    :param current_month: número del mes actual del año
+    :return: arreglo con los destinos que se encuentren en temporada
+    :raise error HTTP 400: si el número de mes actual es mayor a 12.
     """
     if current_month > 12:
         raise HTTPException(status_code=400, detail="Bad Request, month < 12")
@@ -384,46 +425,6 @@ async def get_tourist_destinations_of_season(current_month: int):
             response.append(destination)
         elif init_month < current_month < final_month:
             response.append(destination)
-        elif final_month < init_month and not(final_month < current_month < init_month):
+        elif final_month < init_month and not (final_month < current_month < init_month):
             response.append(destination)
     return response
-
-
-@tourist_destination_router.get("/tourist-destination/conservation-area/{conservation_area_id}")
-def get_tourist_destination_by_conservation_area_id(conservation_area_id: int):
-    """
-    Ruta que resuelve todos los destinos turísticos que pertenecen a
-    una misma área de conservación.
-    param: conservation_area_id: identificador del área de conservación a obtener los destinos.
-    return: arreglo con los destinos asociados al área.
-    """
-    tourist_destinations = db.session.query(ModelTouristDestination).\
-        filter(ModelTouristDestination.conservation_area_id == conservation_area_id).all()
-    return tourist_destinations
-
-
-@tourist_destination_router.get("/tourist-destination/season/{current_month}")
-async def get_tourist_destinations_of_season(current_month: int):
-    """
-    Ruta utilizada para obtener los destinos que se encuentren en temporada en un
-    mes en especifico del año, los destinos tienen un mes de inicio y finalización
-    de temporada, por lo que se valida si inicia y finaliza un mismo año o no.
-    param: current_month: número del mes actual del año
-    return: arreglo con los destinos que se encuentren en temporada
-    raise: error HTTP 400 si el número de mes actual es mayor a 12.
-    """
-    if current_month > 12:
-        raise HTTPException(status_code=400, detail="Bad Request, month < 12")
-    tourist_destinations = db.session.query(ModelTouristDestination).all()
-    response = []
-    for destination in tourist_destinations:
-        init_month = destination.start_season
-        final_month = destination.end_season
-        if init_month == current_month or final_month == current_month:
-            response.append(destination)
-        elif init_month < current_month < final_month:
-            response.append(destination)
-        elif final_month < init_month and not(final_month < current_month < init_month):
-            response.append(destination)
-    return response
-
