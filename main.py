@@ -29,14 +29,13 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi_sqlalchemy import DBSessionMiddleware
 
-from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.router.review import review_router
 from src.router.tourist_destination import tourist_destination_router
 from src.router.conservation_area import conservation_area_router
-from src.user import user
-from src.profile import profile
+from src.router.user import user
+from src.router.profile import profile
 from src.router.gallery import gallery
 
 sinac_turismo_api = FastAPI()

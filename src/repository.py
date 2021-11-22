@@ -223,9 +223,9 @@ async def add_review_photo(directory_name, photo):
 async def update_review_photo(photo_path, directory_name, photo):
     """
     Función para actualizar las fotografías de una opinión de un destino turístico del sistema de archivos.
-    :param photos_path: Ruta del archivo previamente agregado.
+    :param photo_path: Ruta del archivo previamente agregado.
     :param directory_name: Directorio en el cual se almacenan los archivos en el sistema de archivos.
-    :param photos: Datos correspondientes a una imagen.
+    :param photo: Datos correspondientes a una imagen.
     :return new_photos_path: String con las ruta actualizada.
     """
 
@@ -245,6 +245,7 @@ async def delete_review_photo(tourist_destination_id, user_id):
     """
     Función para eliminar el directorio de un destino turístico del sistema de archivos.
     :param tourist_destination_id: identificador del destino turístico
+    :param user_id: identificador del usuario
     """
 
     directory_name = f'{tourist_destination_id}-{user_id}_dir'

@@ -27,7 +27,7 @@ def new_password_generator():
     """
     Función para generar una string aleatoria con el Alfabeto establecido, selecciona
     los caracteres necesarios y agrega hasta completar con el largo establecido.
-    :return string aleatorio
+    :return: string aleatorio
     """
     # Caracteres necesarios en la contraseña
     random_digit = random.choice(DIGITS)
@@ -61,6 +61,10 @@ class Envs:
 
 
 async def send_email(recipient: str, body: dict):
+    """
+    Método utilizado para envíar un correo electronico a una o varias direcciones de correo electronico.
+    """
+    # configuración de los datos del correo
     conf = ConnectionConfig(
         MAIL_USERNAME=Envs.MAIL_USERNAME,
         MAIL_PASSWORD=Envs.MAIL_PASSWORD,
@@ -73,6 +77,7 @@ async def send_email(recipient: str, body: dict):
         USE_CREDENTIALS=True,
         TEMPLATE_FOLDER='./assets/email'
     )
+    # mensaje del correo
     message = MessageSchema(
         subject="Nueva contraseña - SINAC turismo",
         recipients=[recipient],
@@ -80,6 +85,7 @@ async def send_email(recipient: str, body: dict):
         subtype="html"
     )
 
+    # proceso de envio del correo electrónico
     fast_mail = FastMail(conf)
     await fast_mail.send_message(message, template_name='reset_password.html')
     return {"status_code": "200", "message": "Email has been sent"}

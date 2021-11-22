@@ -25,8 +25,8 @@ def create_access_token(data):
     """
     Funcion para crear tokens de acceso para acceder a los endpoint
     que requieran de acceso por parte del usuario
-    :param: data: datos que se codificaran en el tocken a crear
-    :return token generado con los datos, llave secreta y algoritmos seleccionados
+    :param data: datos que se codificaran en el tocken a crear
+    :return: token generado con los datos, llave secreta y algoritmos seleccionados
     """
     to_encode = data.copy()
     access_token = jwt.encode(to_encode, secret_key, algorithm=algorithm)
@@ -37,7 +37,7 @@ def get_password_hash(password):
     """
     Funcion para hashear el contenido de una contraseña y regresa el resultado
     :param password: contraseñá en texto plano
-    :return codigo hash de la contraseña
+    :return: codigo hash de la contraseña
     """
     return pwd_context.hash(password)
 
@@ -45,9 +45,9 @@ def get_password_hash(password):
 def verify_password(plain_password, hashed_password):
     """
     Funcion para verificar si una contraseña conincide con el hash almacenado.
-    param: plain_password: contraseña en tento plano
-    param: hashed_password: valor hash de la contraseña registrada
-    return: verdadero si coninciden, falso en otro caso
+    :param plain_password: contraseña en tento plano
+    :param hashed_password: valor hash de la contraseña registrada
+    :return: verdadero si coninciden, falso en otro caso
     """
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -56,7 +56,7 @@ def encode_token(user_id):
     """
     Funcion para codificar un nuevo token con una fecha de expiración, justo al id
     del usuario al que se le asigna el token.
-    : param: user_id: identificador del usuario del token
+    : param user_id: identificador del usuario del token
     : return: un nuevo token
     """
     payload = {
@@ -75,9 +75,9 @@ def decode_token(token):
     """
     Funcion para decodificar el contenido de un token
     :param token: token utilizado por un usuario
-    :return identificador del usuario que usa el token
-    :raise: 401: el token ya expiro
-    :raise 401: el token es invalido
+    :return: identificador del usuario que usa el token
+    :raise Error 401: el token ya expiro
+    :raise  Error 401: el token es invalido
     """
     try:
         payload = jwt.decode(token, secret, algorithms=['HS256'])
@@ -92,14 +92,17 @@ def auth_wrapper(auth: HTTPAuthorizationCredentials = Security(security)):
     """
     Funcion utilizada para verificar la autorización de las credenciales usadas para acceder a un endpoint
     de la API, verifica que el token sea valido, en caso contrario retorna un error HTTP 401.
-    auth: credenciales utilizadas para acceder a un endpoint
+    :param auth: credenciales utilizadas para acceder a un endpoint.
+    :return: contenido del token.
     """
     return decode_token(auth.credentials)
 
 
 def decode_access_token(data):
     """
-    Funcion
+    Funcion para decodificar el contenido de un token JWT
+    :param data: información del token.
+    :return: información almacenada en el token.
     """
     token_data = jwt.decode(data, secret_key, algorithms=algorithm)
     return token_data
